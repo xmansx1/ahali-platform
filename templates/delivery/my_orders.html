@@ -1,0 +1,113 @@
+{% extends "core/base.html" %}
+{% block title %}طلباتي الحالية{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 bg-white rounded-xl shadow">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">📦 طلباتي الحالية</h2>
+
+  {% if messages %}
+    <div class="mb-4 space-y-2">
+      {% for message in messages %}
+        <div class="bg-green-100 text-green-800 px-4 py-2 rounded shadow text-sm">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% for order in orders %}
+    <div class="border border-gray-200 rounded-lg shadow p-4 mb-5 bg-gray-50">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 mb-3">
+        <p><strong>العميل:</strong> {{ order.customer_name }} ({{ order.customer_phone }})</p>
+        <p><strong>المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
+        <p><strong>موقع العميل:</strong> {{ order.customer_location }}</p>
+        <p><strong>تفاصيل الطلب:</strong> {{ order.details }}</p>
+        <p><strong>المتجر:</strong> {{ order.store.get_full_name|default:order.store.username }}</p>
+        <p><strong>موقع المتجر:</strong> {{ order.store.store_location|default:"غير محدد" }}</p>
+      </div>
+
+      <div class="flex gap-3 flex-wrap mt-4">
+        <a href="{% url 'complete_order' order.id %}"
+           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+          ✅ تم التوصيل
+        </a>
+
+        {% if order.customer_latitude and order.customer_longitude and order.store.store_latitude and order.store.store_longitude %}
+        <button onclick="showMap({{ order.id }})"
+                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm">
+          🗺️ عرض الخريطة
+        </button>
+        {% else %}
+        <span class="text-sm text-yellow-600 mt-2">⚠️ لا يمكن عرض الخريطة (إحداثيات ناقصة)</span>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-center text-gray-500">لا توجد طلبات حالياً قيد التوصيل.</p>
+  {% endfor %}
+</div>
+
+<!-- ✅ Modal الخريطة -->
+<div id="map-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-4 relative">
+    <button onclick="closeMapModal()" class="absolute top-2 left-2 text-gray-600 hover:text-black text-xl">✕</button>
+    <h3 class="text-lg font-semibold mb-3 text-gray-800">🗺️ خريطة الطلب</h3>
+    <div id="map-container" class="h-72 rounded border"></div>
+  </div>
+</div>
+
+<!-- ✅ JavaScript لتشغيل الخريطة -->
+<script>
+  function showMap(orderId) {
+    const order = window.ordersData[orderId];
+    if (!order) return alert("لا توجد بيانات للطلب");
+
+    document.getElementById("map-modal").classList.remove("hidden");
+
+    if (window.mapInstance) {
+      window.mapInstance.remove();
+    }
+
+    const map = L.map("map-container").setView([order.customer_latitude, order.customer_longitude], 13);
+    window.mapInstance = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const clientIcon = L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/535/535239.png",
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    });
+
+    const storeIcon = L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    });
+
+    L.marker([order.customer_latitude, order.customer_longitude], { icon: clientIcon })
+      .addTo(map).bindPopup("📍 موقع العميل");
+
+    L.marker([order.store_latitude, order.store_longitude], { icon: storeIcon })
+      .addTo(map).bindPopup("🏬 موقع المتجر");
+  }
+
+  function closeMapModal() {
+    document.getElementById("map-modal").classList.add("hidden");
+  }
+
+  // ✅ بيانات الطلبات المرسلة من Django
+  window.ordersData = {
+    {% for order in orders %}
+      {% if order.customer_latitude and order.customer_longitude and order.store.store_latitude and order.store.store_longitude %}
+      {{ order.id }}: {
+        customer_latitude: {{ order.customer_latitude }},
+        customer_longitude: {{ order.customer_longitude }},
+        store_latitude: {{ order.store.store_latitude }},
+        store_longitude: {{ order.store.store_longitude }}
+      },
+      {% endif %}
+    {% endfor %}
+  };
+</script>
+{% endblock %}

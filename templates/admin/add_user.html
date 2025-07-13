@@ -1,0 +1,134 @@
+{% extends "core/base.html" %}
+{% block title %}إضافة مستخدم جديد{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">➕ إضافة مستخدم جديد</h2>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="bg-green-100 text-green-800 px-4 py-2 rounded text-sm mb-4 shadow">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- الاسم -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">👤 اسم المستخدم</label>
+      {{ form.username }}
+      {% if form.username.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- رقم الجوال -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">📞 رقم الجوال</label>
+      {{ form.phone_number }}
+      {% if form.phone_number.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- نوع المستخدم -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">👥 نوع المستخدم</label>
+      {{ form.user_type }}
+      {% if form.user_type.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.user_type.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- كلمة المرور -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">🔐 كلمة المرور</label>
+      {{ form.password }}
+      {% if form.password.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.password.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- تأكيد كلمة المرور -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">🔁 تأكيد كلمة المرور</label>
+      {{ form.confirm_password }}
+      {% if form.confirm_password.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.confirm_password.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- تفعيل المستخدم -->
+    <div class="flex items-center gap-2">
+      {{ form.is_active }}
+      <label class="text-sm text-gray-700">✅ تفعيل الحساب</label>
+    </div>
+
+    <!-- حقول التاجر -->
+    <div id="merchant-fields" style="display: none;">
+      <div>
+        <label class="block mb-1 text-sm text-gray-700">📍 عنوان المتجر</label>
+        {{ form.store_location }}
+        {% if form.store_location.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.store_location.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="mt-4">
+        <label class="block mb-1 text-sm text-gray-700">🗺️ تحديد موقع المتجر على الخريطة</label>
+        <div id="map" class="h-64 rounded border shadow my-2"></div>
+      </div>
+
+      {{ form.store_latitude }}
+      {{ form.store_longitude }}
+    </div>
+
+    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium transition">
+      💾 حفظ المستخدم
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const userTypeSelect = document.querySelector('[name="user_type"]');
+  const merchantFields = document.getElementById("merchant-fields");
+  const latInput = document.querySelector('[name="store_latitude"]');
+  const lngInput = document.querySelector('[name="store_longitude"]');
+
+  // ✅ إظهار أو إخفاء خانات المتجر
+  function toggleMerchantFields() {
+    if (userTypeSelect.value === "merchant") {
+      merchantFields.style.display = "block";
+      setTimeout(() => map.invalidateSize(), 200);
+    } else {
+      merchantFields.style.display = "none";
+      latInput.value = "";
+      lngInput.value = "";
+    }
+  }
+
+  userTypeSelect.addEventListener("change", toggleMerchantFields);
+  toggleMerchantFields();
+
+  // ✅ إعداد Leaflet
+  const map = L.map("map").setView([24.7136, 46.6753], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const marker = L.marker([24.7136, 46.6753], { draggable: true }).addTo(map);
+  marker.on("dragend", function (e) {
+    const { lat, lng } = marker.getLatLng();
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+  });
+});
+</script>
+{% endblock %}

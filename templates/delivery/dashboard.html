@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}الطلبات المتاحة للتوصيل{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">🚚 الطلبات المتاحة للتوصيل</h2>
+
+{% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+      <p class="text-green-700 bg-green-100 border border-green-300 p-2 rounded">{{ message }}</p>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if orders %}
+  <div class="grid gap-4">
+    {% for order in orders %}
+      <div class="bg-white p-4 rounded shadow border">
+        <div class="mb-2 text-sm text-gray-600">📍 <strong>الموقع:</strong> {{ order.customer_location }}</div>
+        <div class="text-sm text-gray-600">👤 <strong>العميل:</strong> {{ order.customer_name }} - {{ order.customer_phone }}</div>
+        <div class="text-sm text-gray-600">🛒 <strong>تفاصيل:</strong> {{ order.details }}</div>
+        <div class="text-sm text-gray-600">🏪 <strong>المتجر:</strong> {{ order.store.name }} - {{ order.store.store_location }}</div>
+        <div class="text-sm text-gray-600">💰 <strong>المبلغ:</strong> {{ order.invoice_amount|default:"-" }}</div>
+
+        <form method="post" class="mt-3">
+          {% csrf_token %}
+          <input type="hidden" name="order_id" value="{{ order.id }}">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            📦 سأقوم بالتوصيل
+          </button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-gray-500 mt-6">لا توجد طلبات متاحة للتوصيل حالياً.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}لوحة المشرف - منصة أهالي الحي{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-6">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">📊 لوحة تحكم المشرف</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- عدد الطلبات الكلي -->
+    <div class="bg-white shadow rounded-lg p-5 text-center">
+      <div class="text-sm text-gray-500 mb-2">📦 إجمالي الطلبات</div>
+      <div class="text-2xl font-bold text-blue-600">{{ total_orders }}</div>
+    </div>
+
+    <!-- الطلبات قيد التوصيل -->
+    <div class="bg-white shadow rounded-lg p-5 text-center">
+      <div class="text-sm text-gray-500 mb-2">🚚 طلبات قيد التوصيل</div>
+      <div class="text-2xl font-bold text-yellow-600">{{ delivering_orders }}</div>
+    </div>
+
+    <!-- عدد المتاجر -->
+    <div class="bg-white shadow rounded-lg p-5 text-center">
+      <div class="text-sm text-gray-500 mb-2">🏪 عدد التجار</div>
+      <div class="text-2xl font-bold text-green-600">{{ merchants }}</div>
+    </div>
+
+    <!-- عدد المندوبين -->
+    <div class="bg-white shadow rounded-lg p-5 text-center">
+      <div class="text-sm text-gray-500 mb-2">🚴‍♂️ عدد المندوبين</div>
+      <div class="text-2xl font-bold text-red-600">{{ delivery_users }}</div>
+    </div>
+  </div>
+
+  <div class="mt-8">
+    <a href="{% url 'admin_users' %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      👥 إدارة المستخدمين
+    </a>
+    <a href="{% url 'admin_orders' %}" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 ml-2">
+      📝 إدارة الطلبات
+    </a>
+    <a href="{% url 'admin_stores' %}" class="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 ml-2">
+      🏪 إدارة المتاجر
+    </a>
+  </div>
+</div>
+{% endblock %}

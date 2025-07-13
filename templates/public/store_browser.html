@@ -1,0 +1,193 @@
+{% extends 'core/base.html' %}
+
+{% block title %}تصفح المتاجر - منصة أهالي الحي{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow">
+
+  <!-- ✅ رسائل Django -->
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="p-4 rounded text-sm font-medium
+            {% if message.tags == 'success' %} bg-green-100 text-green-800
+            {% elif message.tags == 'error' %} bg-red-100 text-red-800
+            {% else %} bg-gray-100 text-gray-800
+            {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ✅ العنوان والرجوع -->
+  <div class="flex justify-between items-center mb-6 border-b pb-3">
+    <h2 class="text-2xl font-bold text-gray-800">🏪 المتاجر المتاحة للطلب</h2>
+    <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline flex items-center">
+      ← الرجوع للصفحة الرئيسية
+    </a>
+  </div>
+
+  <!-- ✅ نموذج البحث -->
+  <form method="get" class="mb-6 flex flex-wrap items-end gap-4">
+    <div>
+      <label class="block text-sm mb-1 text-gray-600">🔍 البحث عن متجر</label>
+      <input type="text" name="q" value="{{ request.GET.q }}" class="px-4 py-2 border rounded w-64" placeholder="اسم المتجر أو الموقع...">
+    </div>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      بحث
+    </button>
+  </form>
+
+  <!-- ✅ عرض المتاجر -->
+  {% if stores %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for store in stores %}
+        <div class="border rounded-lg p-4 shadow hover:shadow-lg transition relative">
+          <h3 class="text-lg font-semibold text-blue-700 mb-1">🏪 {{ store.name|default:"اسم المتجر غير متوفر" }}</h3>
+          <p class="text-sm text-gray-600 mb-2">{{ store.address|default:"بدون عنوان" }}</p>
+
+          {% if store.latitude and store.longitude %}
+            <a href="https://www.google.com/maps?q={{ store.latitude }},{{ store.longitude }}" 
+               target="_blank" class="text-blue-500 text-sm hover:underline block mb-2">
+              📍 عرض على الخريطة
+            </a>
+          {% else %}
+            <p class="text-xs text-red-500">⚠️ لم يتم تحديد موقع هذا المتجر</p>
+          {% endif %}
+
+          <button onclick="openOrderForm({{ store.id }})"
+                  class="mt-2 bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700 w-full">
+            🛒 اطلب الآن
+          </button>
+
+          <!-- ✅ نموذج الطلب -->
+          <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
+              <button onclick="closeOrderForm({{ store.id }})"
+                      class="absolute top-2 left-2 text-red-500 text-xl">×</button>
+
+              <form method="post" action="{% url 'submit_store_order' store.id %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="store_name" value="{{ store.name }}">
+
+                <input type="text" name="full_name" placeholder="الاسم الكامل"
+                       class="w-full border p-2 rounded" required>
+                <input type="text" name="phone_number" placeholder="رقم الجوال"
+                       class="w-full border p-2 rounded" required>
+                <textarea name="order_details" placeholder="تفاصيل الطلب..."
+                          class="w-full border p-2 rounded" rows="3" required></textarea>
+
+                <div class="flex gap-4 text-sm">
+                  <label><input type="radio" name="order_type" value="pickup" required> استلام</label>
+                  <label><input type="radio" name="order_type" value="delivery"> توصيل</label>
+                </div>
+
+                <div id="map-{{ store.id }}" class="h-48 w-full border rounded"></div>
+
+                <button type="button" onclick="reLocate({{ store.id }})"
+                        class="bg-gray-200 hover:bg-gray-300 text-sm px-3 py-1 rounded mt-2">
+                  📍 تحديد موقعي تلقائيًا
+                </button>
+
+                <input type="hidden" name="location_lat">
+                <input type="hidden" name="location_lng">
+
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+                  إرسال الطلب
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center text-gray-500 mt-10">لا توجد متاجر متاحة حالياً.</p>
+  {% endif %}
+</div>
+
+<!-- ✅ Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+function openOrderForm(storeId) {
+  const form = document.getElementById(`order-form-${storeId}`);
+  form.classList.remove("hidden");
+
+  const mapContainer = document.getElementById(`map-${storeId}`);
+  const latInput = form.querySelector('input[name="location_lat"]');
+  const lngInput = form.querySelector('input[name="location_lng"]');
+
+  if (mapContainer.dataset.loaded) return;
+
+  const map = L.map(`map-${storeId}`).setView([24.7136, 46.6753], 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+  const marker = L.marker([24.7136, 46.6753], { draggable: true }).addTo(map);
+
+  marker.on("dragend", function () {
+    const { lat, lng } = marker.getLatLng();
+    latInput.value = lat;
+    lngInput.value = lng;
+  });
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], 15);
+        marker.setLatLng([latitude, longitude]);
+        latInput.value = latitude;
+        lngInput.value = longitude;
+      },
+      function (err) {
+        console.warn("فشل في تحديد الموقع:", err.message);
+      }
+    );
+  }
+
+  mapContainer.dataset.loaded = true;
+}
+
+function reLocate(storeId) {
+  const latInput = document.querySelector(`#order-form-${storeId} input[name="location_lat"]`);
+  const lngInput = document.querySelector(`#order-form-${storeId} input[name="location_lng"]`);
+  const map = L.DomUtil.get(`map-${storeId}`)._leaflet_map;
+
+  if (!navigator.geolocation) {
+    alert("المتصفح لا يدعم تحديد الموقع.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker) {
+          layer.setLatLng([lat, lng]);
+        }
+      });
+      map.setView([lat, lng], 15);
+      latInput.value = lat;
+      lngInput.value = lng;
+      alert("✅ تم تحديد موقعك بنجاح!");
+    },
+    function (err) {
+      alert("❌ تعذر تحديد الموقع: " + err.message);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+function closeOrderForm(storeId) {
+  document.getElementById(`order-form-${storeId}`).classList.add("hidden");
+}
+</script>
+{% endblock %}

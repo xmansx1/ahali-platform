@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}منصة أهالي الحي{% endblock %}</title>
+
+  <!-- ✅ Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Google Font: Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <!-- ✅ Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ✅ FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+    }
+    .leaflet-container {
+      direction: ltr !important;
+    }
+    .nav-link-active {
+      background-color: #2563eb;
+      color: white !important;
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
+
+  <!-- ✅ Header -->
+  <header class="bg-white shadow-md py-4 mb-6">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center mb-3">
+        <h1 class="text-xl font-bold text-gray-800">منصة أهالي الحي</h1>
+
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="text-red-500">تسجيل الخروج</button>
+        </form>
+        {% endif %}
+      </div>
+
+      {% if user.is_authenticated %}
+      <nav class="flex flex-wrap gap-3 text-sm font-medium text-gray-700">
+
+        {% if user.user_type == "admin" or user.is_superuser %}
+          <a href="{% url 'admin_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-link-active{% endif %}">🏠 الرئيسية</a>
+          <a href="{% url 'admin_orders' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_orders' %}nav-link-active{% endif %}">📦 الطلبات المسلمة</a>
+          <a href="{% url 'admin_users' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_users' %}nav-link-active{% endif %}">👥 المستخدمين</a>
+          <a href="{% url 'admin_stores' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_stores' %}nav-link-active{% endif %}">🏪 المتاجر</a>
+
+        {% elif user.user_type == "merchant" %}
+          <a href="{% url 'merchant_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'merchant_dashboard' %}nav-link-active{% endif %}">🏠 الرئيسية</a>
+          <a href="{% url 'merchant_archive' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'merchant_archive' %}nav-link-active{% endif %}">🗂️ الأرشيف</a>
+          <a href="{% url 'store_settings' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'store_settings' %}nav-link-active{% endif %}">⚙️ إعدادات المتجر</a>
+
+        {% elif user.user_type == "delivery" %}
+          <a href="{% url 'delivery_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_dashboard' %}nav-link-active{% endif %}">🚚 الطلبات المتاحة</a>
+          <a href="{% url 'my_orders' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'my_orders' %}nav-link-active{% endif %}">📋 طلباتي</a>
+          <a href="{% url 'delivery_archive' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_archive' %}nav-link-active{% endif %}">📁 الأرشيف</a>
+          <a href="{% url 'delivery_settings' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_settings' %}nav-link-active{% endif %}">⚙️ الإعدادات</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ✅ Main Content -->
+  <main class="flex-1 container mx-auto px-4 mb-10">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ✅ Footer -->
+  <footer class="bg-white shadow-inner py-4 text-center text-sm text-gray-500">
+    &copy; جميع الحقوق محفوظة لـ منصة أهالي الحي {{ now|date:"Y" }}
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

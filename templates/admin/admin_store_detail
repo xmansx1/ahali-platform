@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}تفاصيل المتجر{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">🏪 تفاصيل المتجر</h2>
+
+  <ul class="text-sm space-y-3 text-gray-700">
+    <li><strong>👤 اسم التاجر:</strong> {{ user.username }}</li>
+    <li><strong>📞 رقم الجوال:</strong> {{ user.phone_number|default:"-" }}</li>
+    <li><strong>📍 العنوان:</strong> {{ user.store_location|default:"غير محدد" }}</li>
+    <li><strong>🧭 الإحداثيات:</strong>
+      {% if user.store_latitude and user.store_longitude %}
+        {{ user.store_latitude }}, {{ user.store_longitude }}
+      {% else %}
+        <span class="text-red-500">غير متوفرة</span>
+      {% endif %}
+    </li>
+  </ul>
+
+  <!-- ✅ الخريطة -->
+  {% if user.store_latitude and user.store_longitude %}
+  <div class="mt-6">
+    <label class="block mb-2 text-sm font-medium text-gray-700">🗺️ موقع المتجر على الخريطة</label>
+    <div id="map" class="h-72 rounded border shadow"></div>
+  </div>
+  {% endif %}
+
+  <!-- ✅ زر رجوع -->
+  <div class="mt-8">
+    <a href="{% url 'admin_stores' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded">
+      🔙 الرجوع إلى المتاجر
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if user.store_latitude and user.store_longitude %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const lat = {{ user.store_latitude }};
+      const lng = {{ user.store_longitude }};
+      const map = L.map("map").setView([lat, lng], 15);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup("📍 موقع المتجر").openPopup();
+    });
+  </script>
+  {% endif %}
+{% endblock %}

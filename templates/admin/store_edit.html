@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}تعديل بيانات المتجر{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">✏️ تعديل بيانات المتجر</h2>
+
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">👤 اسم التاجر</label>
+      {{ form.username }}
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">📞 رقم الجوال</label>
+      {{ form.phone_number }}
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">📍 عنوان المتجر</label>
+      {{ form.store_location }}
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">🗺️ الموقع على الخريطة</label>
+      <div id="map" class="h-64 rounded border shadow my-2"></div>
+    </div>
+
+    {{ form.store_latitude }}
+    {{ form.store_longitude }}
+
+    <div class="flex items-center gap-2">
+      {{ form.is_active }}
+      <label class="text-sm text-gray-700">تفعيل الحساب</label>
+    </div>
+
+    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium transition">
+      💾 حفظ التعديلات
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const latInput = document.querySelector('[name="store_latitude"]');
+    const lngInput = document.querySelector('[name="store_longitude"]');
+    const lat = parseFloat(latInput.value) || 24.7136;
+    const lng = parseFloat(lngInput.value) || 46.6753;
+
+    const map = L.map("map").setView([lat, lng], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    marker.on("dragend", function (e) {
+      const { lat, lng } = marker.getLatLng();
+      latInput.value = lat.toFixed(6);
+      lngInput.value = lng.toFixed(6);
+    });
+  });
+</script>
+{% endblock %}
