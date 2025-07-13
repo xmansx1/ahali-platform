@@ -62,3 +62,29 @@ class PasswordChangeForm(forms.Form):
         if new and confirm and new != confirm:
             raise forms.ValidationError("كلمة المرور الجديدة غير متطابقة.")
         return cleaned_data
+
+from django import forms
+from .models import Store
+
+class StoreForm(forms.ModelForm):
+    class Meta:
+        model = Store
+        fields = ['name', 'phone', 'address', 'latitude', 'longitude', 'store_type', 'is_available']
+        labels = {
+            'name': 'اسم المتجر',
+            'phone': 'رقم الجوال',
+            'address': 'العنوان',
+            'latitude': 'خط العرض',
+            'longitude': 'خط الطول',
+            'store_type': 'نوع المتجر',
+            'is_available': 'متاح لاستقبال الطلبات؟',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input'}),
+            'address': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
+            'latitude': forms.NumberInput(attrs={'step': 'any', 'class': 'form-input'}),
+            'longitude': forms.NumberInput(attrs={'step': 'any', 'class': 'form-input'}),
+            'store_type': forms.Select(attrs={'class': 'form-select'}),
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        }

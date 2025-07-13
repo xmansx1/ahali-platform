@@ -5,7 +5,7 @@
 <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
   <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">💼 إدارة المتاجر</h2>
 
-  <!-- ✅ نموذج البحث -->
+  <!-- 🔍 نموذج البحث -->
   <form method="get" class="flex flex-wrap items-end gap-4 mb-6">
     <div>
       <label class="block text-sm mb-1">اسم المستخدم أو المتجر</label>
@@ -14,34 +14,50 @@
     <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">🔍 بحث</button>
   </form>
 
-  <!-- ✅ جدول المتاجر -->
-  <table class="w-full border text-sm">
-    <thead class="bg-gray-100 text-right">
+  <!-- 🧾 جدول عرض المتاجر -->
+  <table class="w-full border text-sm text-right">
+    <thead class="bg-gray-100">
       <tr>
         <th class="p-2">اسم التاجر</th>
+        <th class="p-2">اسم المتجر</th>
         <th class="p-2">رقم الجوال</th>
-        <th class="p-2">عنوان المتجر</th>
+        <th class="p-2">نوع المتجر</th>
+        <th class="p-2">العنوان</th>
         <th class="p-2">الإحداثيات</th>
+        <th class="p-2">متاح؟</th>
         <th class="p-2">التحكم</th>
       </tr>
     </thead>
     <tbody>
-      {% for user in merchants %}
+      {% for store in stores %}
         <tr class="border-t hover:bg-gray-50">
-          <td class="p-2">{{ user.username }}</td>
-          <td class="p-2">{{ user.phone_number }}</td>
-          <td class="p-2">{{ user.store_location|default:"-" }}</td>
+          <td class="p-2">{{ store.user.get_full_name|default:store.user.username }}</td>
+          <td class="p-2">{{ store.name|default:"-" }}</td>
+          <td class="p-2">{{ store.phone|default:"-" }}</td>
+          <td class="p-2">{{ store.get_store_type_display }}</td>
+          <td class="p-2">{{ store.address|default:"-" }}</td>
           <td class="p-2">
-            {% if user.store_latitude and user.store_longitude %}
-              {{ user.store_latitude }}, {{ user.store_longitude }}
+            {% if store.latitude and store.longitude %}
+              {{ store.latitude }}, {{ store.longitude }}
             {% else %}-{% endif %}
           </td>
           <td class="p-2">
-            <a href="{% url 'admin_store_detail' user.id %}" class="text-blue-600 hover:underline">🔍 عرض</a>
+            {% if store.is_available %}
+              <span class="text-green-600 font-semibold">نعم</span>
+            {% else %}
+              <span class="text-red-600 font-semibold">لا</span>
+            {% endif %}
+          </td>
+          <td class="p-2 whitespace-nowrap">
+            <a href="{% url 'admin_store_detail' store.id %}" class="text-blue-600 hover:underline">🔍 عرض</a>
+            |
+            <a href="{% url 'admin_store_edit' store.id %}" class="text-yellow-600 hover:underline">✏️ تعديل</a>
           </td>
         </tr>
       {% empty %}
-        <tr><td colspan="5" class="text-center text-gray-500 p-4">لا توجد متاجر مطابقة.</td></tr>
+        <tr>
+          <td colspan="8" class="text-center text-gray-500 p-4">لا توجد متاجر مطابقة.</td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>

@@ -9,6 +9,7 @@ from django.http import HttpResponse
 import openpyxl
 from django.db.models import Q
 from .forms import AddUserForm
+from stores.models import Store
 
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
@@ -171,26 +172,6 @@ def admin_user_detail(request, user_id):
     user = get_object_or_404(User, id=user_id)
 
     return render(request, 'admin/users/detail.html', {'user_obj': user})
-@login_required
-def admin_stores(request):
-    if request.user.user_type != 'admin':
-        return redirect('home')
-
-    # 🔍 دعم البحث
-    query = request.GET.get('q', '')
-    stores = User.objects.filter(user_type='merchant')
-
-    if query:
-        stores = stores.filter(
-            Q(username__icontains=query) |
-            Q(phone_number__icontains=query)
-        )
-
-    context = {
-        'stores': stores.order_by('username'),
-        'search_query': query,
-    }
-    return render(request, 'admin/stores.html', context)
 
 @login_required
 def admin_store_detail(request, user_id):
@@ -300,3 +281,48 @@ def admin_edit_user(request, user_id):
 def merchant_orders(request):
     # لاحقًا تضيف الفلاتر للطلبات الخاصة بالتاجر فقط
     return render(request, 'merchant/orders.html')
+
+
+
+def admin_stores_view(request):
+    query = request.GET.get('q', '')
+    stores = Store.objects.select_related('user').all()
+
+    if query:
+        stores = stores.filter(
+            Q(user__username__icontains=query) |
+            Q(name__icontains=query) |
+            Q(address__icontains=query)
+        )
+
+    context = {
+        'stores': stores,
+        'search_query': query,
+    }
+    return render(request, 'admin/stores.html', context)
+
+from django.shortcuts import render, get_object_or_404
+from stores.models import Store
+
+def admin_store_detail_view(request, store_id):
+    store = get_object_or_404(Store, id=store_id)
+    return render(request, 'admin/user_detail.html', {'store': store})
+
+
+from stores.forms import StoreForm  # تأكد أن لديك هذا النموذج
+
+def admin_store_edit_view(request, store_id):
+    store = get_object_or_404(Store, id=store_id)
+
+    if request.method == 'POST':
+        form = StoreForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_stores')
+    else:
+        form = StoreForm(instance=store)
+
+    return render(request, 'admin/store_edit.html', {
+        'form': form,
+        'store': store
+    })
