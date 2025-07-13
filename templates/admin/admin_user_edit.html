@@ -1,4 +1,6 @@
-{% extends "base.html" %}
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+
 {% block title %}تعديل المستخدم{% endblock %}
 
 {% block content %}
@@ -19,23 +21,23 @@
 
     <div class="space-y-4">
       <div>
-        <label class="block mb-1 text-sm">اسم المستخدم</label>
-        {{ form.username }}
+        <label class="block mb-1 text-sm">👤 اسم المستخدم</label>
+        {{ form.username|add_class:"w-full border rounded px-3 py-2" }}
       </div>
 
       <div>
-        <label class="block mb-1 text-sm">رقم الجوال</label>
-        {{ form.phone_number }}
+        <label class="block mb-1 text-sm">📞 رقم الجوال</label>
+        {{ form.phone_number|add_class:"w-full border rounded px-3 py-2" }}
       </div>
 
       <div>
-        <label class="block mb-1 text-sm">نوع المستخدم</label>
-        {{ form.user_type }}
+        <label class="block mb-1 text-sm">⚙️ نوع المستخدم</label>
+        {{ form.user_type|add_class:"w-full border rounded px-3 py-2" }}
       </div>
 
       <div class="flex items-center gap-2">
         {{ form.is_active }}
-        <label class="text-sm">تفعيل المستخدم</label>
+        <label class="text-sm">🔓 تفعيل المستخدم</label>
       </div>
 
       <button type="submit" name="save_user" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -50,10 +52,12 @@
   <form method="POST">
     {% csrf_token %}
     {{ pass_form.non_field_errors }}
+
     <div class="mb-4">
-      {{ pass_form.new_password.label_tag }}
-      {{ pass_form.new_password }}
+      <label class="block mb-1 text-sm">🔑 كلمة المرور الجديدة</label>
+      {{ pass_form.new_password|add_class:"w-full border rounded px-3 py-2" }}
     </div>
+
     <button type="submit" name="change_password" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
       🔄 تحديث كلمة المرور
     </button>

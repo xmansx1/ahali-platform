@@ -1,68 +1,104 @@
-{% extends "base.html" %}
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+
 {% block title %}تعديل بيانات المتجر{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
   <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">✏️ تعديل بيانات المتجر</h2>
 
-  <form method="POST" class="space-y-4">
+  <form method="POST" class="space-y-5">
     {% csrf_token %}
     {{ form.non_field_errors }}
 
+    <!-- 🏪 اسم المتجر -->
     <div>
-      <label class="block mb-1 text-sm text-gray-700">👤 اسم التاجر</label>
-      {{ form.username }}
+      <label class="block mb-1 text-sm text-gray-700">🏪 اسم المتجر</label>
+      {{ form.name|add_class:"w-full border rounded px-3 py-2" }}
+      {{ form.name.errors }}
     </div>
 
+    <!-- 📞 رقم الجوال -->
     <div>
       <label class="block mb-1 text-sm text-gray-700">📞 رقم الجوال</label>
-      {{ form.phone_number }}
+      {{ form.phone|add_class:"w-full border rounded px-3 py-2" }}
+      {{ form.phone.errors }}
     </div>
 
+    <!-- 📍 العنوان التفصيلي -->
     <div>
-      <label class="block mb-1 text-sm text-gray-700">📍 عنوان المتجر</label>
-      {{ form.store_location }}
+      <label class="block mb-1 text-sm text-gray-700">📍 العنوان التفصيلي</label>
+      {{ form.address|add_class:"w-full border rounded px-3 py-2" }}
+      {{ form.address.errors }}
     </div>
 
+    <!-- 🏷️ نوع المتجر -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">🏷️ نوع المتجر</label>
+      {{ form.store_type|add_class:"w-full border rounded px-3 py-2" }}
+      {{ form.store_type.errors }}
+    </div>
+
+    <!-- 🗺️ الموقع على الخريطة -->
     <div>
       <label class="block mb-1 text-sm text-gray-700">🗺️ الموقع على الخريطة</label>
       <div id="map" class="h-64 rounded border shadow my-2"></div>
     </div>
 
-    {{ form.store_latitude }}
-    {{ form.store_longitude }}
+    {{ form.latitude.as_hidden }}
+    {{ form.longitude.as_hidden }}
 
-    <div class="flex items-center gap-2">
-      {{ form.is_active }}
-      <label class="text-sm text-gray-700">تفعيل الحساب</label>
+    <div class="text-sm text-gray-600">
+      📌 الإحداثيات الحالية:
+      <span id="lat-display">{{ form.instance.latitude|default:"--" }}</span>,
+      <span id="lng-display">{{ form.instance.longitude|default:"--" }}</span>
     </div>
 
-    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium transition">
-      💾 حفظ التعديلات
-    </button>
+    <!-- 📦 المتجر متاح -->
+    <div class="flex items-center mt-4">
+      {{ form.is_available|add_class:"mr-2 h-4 w-4" }}
+      <label class="text-sm text-gray-700">📦 المتجر متاح لاستقبال الطلبات</label>
+    </div>
+
+    <!-- ✅ أزرار -->
+    <div class="flex gap-4 mt-6">
+      <button type="submit"
+              class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-medium transition">
+        💾 حفظ التعديلات
+      </button>
+    </div>
   </form>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- ✅ Leaflet map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const latInput = document.querySelector('[name="store_latitude"]');
-    const lngInput = document.querySelector('[name="store_longitude"]');
+    const latInput = document.querySelector('[name="latitude"]');
+    const lngInput = document.querySelector('[name="longitude"]');
+    const latDisplay = document.getElementById("lat-display");
+    const lngDisplay = document.getElementById("lng-display");
+
     const lat = parseFloat(latInput.value) || 24.7136;
     const lng = parseFloat(lngInput.value) || 46.6753;
 
-    const map = L.map("map").setView([lat, lng], 13);
+    const map = L.map("map").setView([lat, lng], 14);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-    marker.on("dragend", function (e) {
+    marker.on("dragend", function () {
       const { lat, lng } = marker.getLatLng();
       latInput.value = lat.toFixed(6);
       lngInput.value = lng.toFixed(6);
+      latDisplay.textContent = lat.toFixed(6);
+      lngDisplay.textContent = lng.toFixed(6);
     });
   });
 </script>

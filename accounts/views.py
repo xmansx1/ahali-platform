@@ -10,6 +10,7 @@ import openpyxl
 from django.db.models import Q
 from .forms import AddUserForm
 from stores.models import Store
+from django.utils.dateparse import parse_date
 
 class CustomLoginView(LoginView):
     template_name = 'accounts/login.html'
@@ -39,23 +40,47 @@ def home_redirect(request):
     else:
         return redirect('admin:index')  # للمشرفين
 
+from stores.models import Store
+from django.views.decorators.http import require_POST
+
 @login_required
 def admin_dashboard(request):
     if request.user.user_type != 'admin':
-        return redirect('home')
+        return redirect('login')
 
+    # 🟢 إحصائيات عامة
     total_orders = Order.objects.count()
     delivering_orders = Order.objects.filter(status='delivering').count()
     merchants = User.objects.filter(user_type='merchant').count()
     delivery_users = User.objects.filter(user_type='delivery').count()
 
-    context = {
+    # 🟠 المتاجر الغير نشطة
+    inactive_stores = Store.objects.filter(is_active=False)
+
+    return render(request, 'admin/dashboard.html', {
         'total_orders': total_orders,
         'delivering_orders': delivering_orders,
         'merchants': merchants,
         'delivery_users': delivery_users,
-    }
-    return render(request, 'admin/dashboard.html', context)
+        'inactive_stores': inactive_stores,
+    })
+
+# ✅ لتفعيل المتجر
+@require_POST
+@login_required
+def activate_store(request, store_id):
+    if request.user.user_type != 'admin':
+        return redirect('home')
+
+    store = get_object_or_404(Store, id=store_id)
+    store.is_active = True
+    store.save()
+    messages.success(request, f"✅ تم تفعيل المتجر: {store.name}")
+    return redirect('admin_dashboard')
+
+
+
+from datetime import datetime
 
 @login_required
 def admin_orders(request):
@@ -63,15 +88,28 @@ def admin_orders(request):
         return redirect('home')
 
     selected_merchant_id = request.GET.get('merchant')
-    selected_date = request.GET.get('date')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
     export_excel = request.GET.get('export') == 'excel'
 
-    orders = Order.objects.filter(status='delivered')
+    orders = Order.objects.filter(status='delivered').select_related('store')
 
-    if selected_merchant_id:
-        orders = orders.filter(store_id=selected_merchant_id)
-    if selected_date:
-        orders = orders.filter(created_at__date=selected_date)
+    # فلترة بالتاجر
+    if selected_merchant_id and selected_merchant_id.isdigit():
+        orders = orders.filter(store__user__id=int(selected_merchant_id))
+
+    # فلترة بين تاريخين
+    if date_from:
+        try:
+            orders = orders.filter(created_at__date__gte=datetime.strptime(date_from, "%Y-%m-%d").date())
+        except ValueError:
+            messages.error(request, "صيغة التاريخ غير صحيحة (من).")
+
+    if date_to:
+        try:
+            orders = orders.filter(created_at__date__lte=datetime.strptime(date_to, "%Y-%m-%d").date())
+        except ValueError:
+            messages.error(request, "صيغة التاريخ غير صحيحة (إلى).")
 
     if export_excel:
         wb = openpyxl.Workbook()
@@ -83,12 +121,12 @@ def admin_orders(request):
 
         for order in orders:
             ws.append([
-                order.customer_name,
-                order.customer_phone,
-                order.customer_location,
+                order.customer_name or '',
+                order.customer_phone or '',
+                order.customer_location or '',
                 order.invoice_amount or '',
-                order.store.name,
-                order.assigned_to.username if order.assigned_to else '',
+                order.store.name if order.store else '',
+                order.assigned_to.get_full_name() if order.assigned_to else '',
                 order.created_at.strftime('%Y-%m-%d %H:%M'),
             ])
 
@@ -99,29 +137,19 @@ def admin_orders(request):
         wb.save(response)
         return response
 
-    merchants = User.objects.filter(user_type='merchant')
-    order_count = orders.count()
+    merchants = User.objects.filter(user_type='merchant', is_active=True)
 
     context = {
         'orders': orders.order_by('-created_at'),
         'merchants': merchants,
         'selected_merchant_id': selected_merchant_id,
-        'selected_date': selected_date,
-        'order_count': order_count,
+        'selected_date_from': date_from,
+        'selected_date_to': date_to,
+        'order_count': orders.count(),
     }
     return render(request, 'admin/orders.html', context)
 
-
-@login_required
-def toggle_user_status(request, user_id):
-    if request.user.user_type != 'admin':
-        return redirect('home')
-
-    user = get_object_or_404(User, id=user_id)
-    user.is_active = not user.is_active
-    user.save()
-    messages.success(request, f"تم تحديث حالة المستخدم: {user.username}")
-    return redirect('admin_users')
+    return render(request, 'admin/orders.html', context)
 
 @login_required
 def admin_users(request):
@@ -163,15 +191,32 @@ def add_user(request):
 
     return render(request, 'admin/add_user.html', {'form': form})
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from accounts.models import User
 
 @login_required
 def admin_user_detail(request, user_id):
+    # ✅ التأكد أن المستخدم الحالي يملك صلاحية المشرف
     if request.user.user_type != 'admin':
+        messages.error(request, "غير مصرح لك بالوصول لهذه الصفحة.")
         return redirect('home')
 
-    user = get_object_or_404(User, id=user_id)
+    # ✅ الحصول على المستخدم المطلوب أو عرض 404
+    target_user = get_object_or_404(User, id=user_id)
 
-    return render(request, 'admin/users/detail.html', {'user_obj': user})
+    # ✅ محاولة الحصول على المتجر المرتبط بالمستخدم، إن وجد
+    store = getattr(target_user, 'store', None)
+
+    # ✅ تجهيز البيانات لإرسالها إلى القالب
+    context = {
+        'target_user': target_user,
+        'store': store,
+    }
+
+    return render(request, 'admin/user_detail.html', context)
+
 
 @login_required
 def admin_store_detail(request, user_id):
@@ -259,23 +304,39 @@ def admin_change_password(request, user_id):
 
 from accounts.forms import UserEditForm
 
+
 @login_required
 def admin_edit_user(request, user_id):
     if request.user.user_type != 'admin':
+        messages.warning(request, "🚫 ليس لديك صلاحية الوصول لهذه الصفحة.")
         return redirect('home')
 
     user = get_object_or_404(User, id=user_id)
 
-    if request.method == 'POST':
-        form = UserEditForm(request.POST, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "✅ تم تعديل بيانات المستخدم بنجاح.")
-            return redirect('admin_users')
-    else:
-        form = UserEditForm(instance=user)
+    # 🟢 تعريف النماذج
+    form = UserEditForm(request.POST or None, instance=user)
+    pass_form = PasswordChangeAdminForm(request.POST or None)
 
-    return render(request, 'admin/admin_user_edit.html', {'form': form, 'user_obj': user})
+    # 🧠 تعديل بيانات المستخدم
+    if request.method == 'POST':
+        if 'save_user' in request.POST and form.is_valid():
+            form.save()
+            messages.success(request, "✅ تم حفظ بيانات المستخدم بنجاح.")
+            return redirect('admin_edit_user', user_id=user.id)
+
+        elif 'change_password' in request.POST and pass_form.is_valid():
+            new_password = pass_form.cleaned_data['new_password']
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, "🔐 تم تغيير كلمة المرور بنجاح.")
+            return redirect('admin_edit_user', user_id=user.id)
+
+    context = {
+        'form': form,
+        'pass_form': pass_form,
+        'user_obj': user,
+    }
+    return render(request, 'admin/admin_user_edit.html', context)
 
 @login_required
 def merchant_orders(request):
@@ -311,18 +372,53 @@ def admin_store_detail_view(request, store_id):
 
 from stores.forms import StoreForm  # تأكد أن لديك هذا النموذج
 
+@login_required
 def admin_store_edit_view(request, store_id):
+    # ✅ التأكد من أن المستخدم يملك صلاحية "مشرف"
+    if request.user.user_type != 'admin':
+        messages.error(request, "🚫 غير مصرح لك بالوصول إلى هذه الصفحة.")
+        return redirect('home')
+
+    # ✅ جلب المتجر أو إظهار 404
     store = get_object_or_404(Store, id=store_id)
 
     if request.method == 'POST':
         form = StoreForm(request.POST, instance=store)
         if form.is_valid():
             form.save()
-            return redirect('admin_stores')
+            messages.success(request, "✅ تم تحديث بيانات المتجر بنجاح.")
+            return redirect('admin_store_detail', store_id=store.id)
+        else:
+            messages.error(request, "❌ حدث خطأ أثناء حفظ البيانات. تأكد من صحة الحقول.")
     else:
         form = StoreForm(instance=store)
 
     return render(request, 'admin/store_edit.html', {
         'form': form,
-        'store': store
+        'store': store,
     })
+    
+@login_required
+def toggle_user_status(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.is_active = not user.is_active
+    user.save()
+
+    action = "تم تفعيل" if user.is_active else "تم تعطيل"
+    messages.success(request, f"✅ {action} المستخدم: {user.get_full_name() or user.username}")
+    return redirect('admin_users')
+
+@login_required
+def toggle_store_status(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if hasattr(user, 'store'):
+        store = user.store
+        store.is_active = not store.is_active
+        store.save()
+        if store.is_active:
+            messages.success(request, f"✅ تم تنشيط المتجر: {store.name}")
+        else:
+            messages.warning(request, f"❌ تم تعطيل المتجر: {store.name}")
+    else:
+        messages.error(request, "❌ هذا المستخدم لا يملك متجرًا")
+    return redirect('admin_users')

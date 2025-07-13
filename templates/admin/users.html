@@ -10,7 +10,6 @@
     </a>
   </div>
 
-  <!-- ✅ رسائل النظام -->
   {% if messages %}
     <div class="mb-4 space-y-2">
       {% for msg in messages %}
@@ -53,7 +52,8 @@
           <th class="p-2 border">رقم الجوال</th>
           <th class="p-2 border">النوع</th>
           <th class="p-2 border">الحالة</th>
-          <th class="p-2 border text-center">إجراء</th>
+          <th class="p-2 border text-center">الحساب</th>
+          <th class="p-2 border text-center">المتجر</th>
         </tr>
       </thead>
       <tbody>
@@ -69,16 +69,42 @@
                 <span class="text-red-600 font-semibold">معطل</span>
               {% endif %}
             </td>
+            <!-- زر تفعيل/تعطيل الحساب -->
             <td class="p-2 text-center">
-              <a href="{% url 'toggle_user_status' user.id %}"
-                 class="text-sm bg-gray-700 hover:bg-gray-800 text-white px-4 py-1 rounded">
-                {% if user.is_active %} تعطيل {% else %} تفعيل {% endif %}
-              </a>
+              {% if user.is_active %}
+                <a href="{% url 'toggle_user_status' user.id %}"
+                   class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-sm transition">
+                  🔒 تعطيل
+                </a>
+              {% else %}
+                <a href="{% url 'toggle_user_status' user.id %}"
+                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm transition">
+                  ✅ تفعيل
+                </a>
+              {% endif %}
+            </td>
+            <!-- زر تفعيل/تعطيل المتجر للتاجر فقط -->
+            <td class="p-2 text-center">
+              {% if user.user_type == 'merchant' and user.store %}
+                {% if user.store.is_active %}
+                  <a href="{% url 'toggle_store_status' user.id %}"
+                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-sm transition">
+                    🏪 تعطيل المتجر
+                  </a>
+                {% else %}
+                  <a href="{% url 'toggle_store_status' user.id %}"
+                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm transition">
+                    🏪 تفعيل المتجر
+                  </a>
+                {% endif %}
+              {% else %}
+                <span class="text-gray-400">-</span>
+              {% endif %}
             </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="5" class="text-center p-4 text-gray-500">لا يوجد مستخدمون مطابقون.</td>
+            <td colspan="6" class="text-center p-4 text-gray-500">لا يوجد مستخدمون مطابقون.</td>
           </tr>
         {% endfor %}
       </tbody>

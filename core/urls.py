@@ -5,4 +5,5 @@ from .views import public_store_browser
 urlpatterns = [
     path('', home, name='home'),
     path('stores/', public_store_browser, name='public_store_browser'),
+    path('stores/', public_store_browser, name='store_browser'),
 ]

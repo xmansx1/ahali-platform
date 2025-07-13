@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from orders.models import Order
 from .forms import DeliverySettingsForm
+from datetime import datetime
 
 # ✅ لوحة المندوب: عرض الطلبات الجاهزة للتوصيل
 @login_required
@@ -11,7 +12,7 @@ def delivery_dashboard(request):
         messages.error(request, "غير مصرح لك بالوصول لهذه الصفحة.")
         return redirect('home')
 
-    # جلب الطلبات المتاحة
+    # جلب الطلبات غير المسندة الجاهزة للتوصيل
     orders = Order.objects.filter(status='delivering', assigned_to__isnull=True).order_by('-created_at')
 
     if request.method == "POST":
@@ -24,7 +25,7 @@ def delivery_dashboard(request):
 
     return render(request, 'delivery/dashboard.html', {'orders': orders})
 
-# ✅ قبول الطلب (ربطه بالمندوب)
+# ✅ قبول الطلب
 @login_required
 def accept_order(request, order_id):
     if request.user.user_type != 'delivery':
@@ -43,14 +44,13 @@ def my_orders(request):
         return redirect('login')
 
     orders = Order.objects.filter(
-        status='delivering',
-        assigned_to=request.user
+        assigned_to=request.user,
+        status='delivering'
     ).order_by('-created_at')
 
     return render(request, 'delivery/my_orders.html', {'orders': orders})
 
-
-# ✅ إنهاء الطلب وتحديث حالته
+# ✅ إنهاء الطلب
 @login_required
 def complete_order(request, order_id):
     if request.user.user_type != 'delivery':
@@ -61,35 +61,34 @@ def complete_order(request, order_id):
     order.save()
     messages.success(request, "✅ تم تسليم الطلب بنجاح.")
     return redirect('my_orders')
-from datetime import datetime
 
-# ✅ أرشيف الطلبات التي تم توصيلها
+# ✅ أرشيف الطلبات التي تم تسليمها
 @login_required
 def delivery_archive(request):
     if request.user.user_type != 'delivery':
         return redirect('login')
 
-    orders = Order.objects.filter(
-        status='delivered',
-        assigned_to=request.user
-    )
+    orders = Order.objects.filter(status='delivered', assigned_to=request.user)
 
-    # ✅ فلترة اختيارية حسب التاريخ
-    date = request.GET.get('date')
-    if date:
-        try:
-            date_obj = datetime.strptime(date, "%Y-%m-%d")
-            orders = orders.filter(created_at__date=date_obj)
-        except ValueError:
-            pass
+    # فلترة بالتاريخ (من - إلى)
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    try:
+        if date_from:
+            orders = orders.filter(created_at__date__gte=datetime.strptime(date_from, "%Y-%m-%d"))
+        if date_to:
+            orders = orders.filter(created_at__date__lte=datetime.strptime(date_to, "%Y-%m-%d"))
+    except ValueError:
+        messages.error(request, "صيغة التاريخ غير صحيحة.")
 
     orders = orders.order_by('-created_at')
     return render(request, 'delivery/archive.html', {
         'orders': orders,
-        'selected_date': date or ''
+        'date_from': date_from or '',
+        'date_to': date_to or ''
     })
 
-
+# ✅ إعدادات المندوب
 @login_required
 def delivery_settings(request):
     if request.user.user_type != 'delivery':
@@ -113,7 +112,7 @@ def delivery_settings(request):
                 user.save()
                 messages.success(request, "🔐 تم تغيير كلمة المرور.")
             else:
-                messages.error(request, "❌ تحقق من البيانات.")
+                messages.error(request, "❌ تحقق من صحة كلمة المرور الحالية وتطابق الجديدة.")
 
     form = DeliverySettingsForm(instance=user)
     return render(request, 'delivery/settings.html', {'form': form})

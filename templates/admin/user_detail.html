@@ -2,14 +2,24 @@
 {% block title %}تفاصيل المستخدم{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-  <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">👤 تفاصيل المستخدم</h2>
+<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6 mt-6">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">👤 تفاصيل المستخدم</h2>
 
-  <ul class="space-y-3 text-sm text-gray-700">
-    <li><strong>👤 الاسم:</strong> {{ user.username }}</li>
-    <li><strong>📞 رقم الجوال:</strong> {{ user.phone_number|default:"-" }}</li>
-    <li><strong>🧾 النوع:</strong> {{ user.get_user_type_display }}</li>
-    <li><strong>⚙️ الحالة:</strong>
+  <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
+    <li><strong>👤 الاسم:</strong> {{ user.get_full_name|default:user.username }}</li>
+    <li><strong>📞 رقم الجوال:</strong> {{ user.phone_number|default:"غير متوفر" }}</li>
+    <li><strong>⚙️ النوع:</strong>
+      {% if user.user_type == 'admin' %}
+        مشرف
+      {% elif user.user_type == 'merchant' %}
+        تاجر
+      {% elif user.user_type == 'delegate' %}
+        مندوب
+      {% else %}
+        غير معروف
+      {% endif %}
+    </li>
+    <li><strong>📌 الحالة:</strong>
       {% if user.is_active %}
         <span class="text-green-600 font-semibold">مفعل</span>
       {% else %}
@@ -18,50 +28,25 @@
     </li>
 
     {% if user.user_type == "merchant" and user.store %}
-      <li><strong>📍 عنوان المتجر:</strong> {{ user.store.address|default:"غير محدد" }}</li>
-      <li><strong>📌 الإحداثيات:</strong>
-        {% if user.store.latitude and user.store.longitude %}
-          {{ user.store.latitude }}, {{ user.store.longitude }}
-        {% else %}
-          <span class="text-red-500">غير متوفرة</span>
-        {% endif %}
-      </li>
+      <li><strong>🏪 اسم المتجر:</strong> {{ user.store.name|default:"غير محدد" }}</li>
+      <li><strong>📍 العنوان:</strong> {{ user.store.address|default:"غير محدد" }}</li>
     {% endif %}
   </ul>
 
-  {% if user.user_type == "merchant" and user.store and user.store.latitude and user.store.longitude %}
-    <div class="mt-6">
-      <label class="block mb-2 text-sm font-semibold text-gray-700">🗺️ موقع المتجر على الخريطة</label>
-      <div id="map" class="h-64 rounded border shadow"></div>
-    </div>
-  {% endif %}
-
   <div class="mt-8 flex flex-wrap gap-3">
-    <a href="{% url 'admin_users' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">🔙 الرجوع</a>
+    <a href="{% url 'admin_users' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+      🔙 الرجوع
+    </a>
 
-    <a href="{% url 'admin_change_password' user.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">✏️ تعديل كلمة المرور</a>
+    <a href="{% url 'admin_edit_user' user.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+      🛠️ تعديل بيانات المستخدم
+    </a>
 
-    <a href="{% url 'admin_edit_user' user.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">🛠️ تعديل بيانات المستخدم</a>
-
-    {% if user.user_type == 'merchant' %}
-      <a href="{% url 'admin_store_edit' user.store.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">🏪 تعديل بيانات المتجر</a>
+    {% if user.user_type == "merchant" and user.store %}
+    <a href="{% url 'admin_store_edit' user.store.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+      🏪 تعديل بيانات المتجر
+    </a>
     {% endif %}
   </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-  {% if user.user_type == "merchant" and user.store and user.store.latitude and user.store.longitude %}
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const lat = {{ user.store.latitude }};
-      const lng = {{ user.store.longitude }};
-      const map = L.map("map").setView([lat, lng], 14);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      L.marker([lat, lng]).addTo(map).bindPopup("📍 موقع المتجر").openPopup();
-    });
-  </script>
-  {% endif %}
 {% endblock %}

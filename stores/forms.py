@@ -5,31 +5,34 @@ from stores.models import Store
 class StoreSettingsForm(forms.ModelForm):
     class Meta:
         model = Store
-        fields = ['phone', 'is_available', 'address', 'latitude', 'longitude']
+        fields = ['phone', 'address', 'latitude', 'longitude', 'is_available']
         labels = {
-            'phone': 'رقم الجوال',
-            'address': 'عنوان المتجر',
-            'is_available': 'متاح لاستقبال الطلبات',
+            'phone': '📞 رقم الجوال',
+            'address': '📍 عنوان المتجر',
+            'latitude': '📍 خط العرض',
+            'longitude': '📍 خط الطول',
+            'is_available': '📦 المتجر متاح لاستقبال الطلبات',
         }
         widgets = {
             'phone': forms.TextInput(attrs={
                 'class': 'w-full border rounded px-3 py-2',
-                'placeholder': 'مثال: 0551234567'
+                'placeholder': 'مثال: 0551234567',
+                'dir': 'ltr'
             }),
             'address': forms.TextInput(attrs={
                 'class': 'w-full border rounded px-3 py-2',
                 'placeholder': 'مثال: حي الربيع، الرياض'
             }),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
             'is_available': forms.CheckboxInput(attrs={
                 'class': 'h-4 w-4 text-green-600 border-gray-300 rounded'
             }),
-            'latitude': forms.HiddenInput(),
-            'longitude': forms.HiddenInput(),
         }
 
+    # ✅ طريقة أكثر موثوقية للتعامل مع الحقل checkbox عند عدم التفعيل (unchecked)
     def clean_is_available(self):
-        value = self.data.get('is_available')
-        return value == 'on'  # ✅ يُعيد True فقط إذا كانت القيمة 'on'
+        return self.cleaned_data.get('is_available', False)
 
 
 class PasswordChangeForm(forms.Form):
@@ -66,10 +69,15 @@ class PasswordChangeForm(forms.Form):
 from django import forms
 from .models import Store
 
+
 class StoreForm(forms.ModelForm):
     class Meta:
         model = Store
-        fields = ['name', 'phone', 'address', 'latitude', 'longitude', 'store_type', 'is_available']
+        fields = [
+            'name', 'phone', 'address',
+            'latitude', 'longitude', 'store_type',
+            'is_available', 'is_active'  # ✅ تمت الإضافة هنا
+        ]
         labels = {
             'name': 'اسم المتجر',
             'phone': 'رقم الجوال',
@@ -78,6 +86,7 @@ class StoreForm(forms.ModelForm):
             'longitude': 'خط الطول',
             'store_type': 'نوع المتجر',
             'is_available': 'متاح لاستقبال الطلبات؟',
+            'is_active': 'تفعيل الحساب',  # ✅ تمت الإضافة هنا
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input'}),
@@ -87,4 +96,5 @@ class StoreForm(forms.ModelForm):
             'longitude': forms.NumberInput(attrs={'step': 'any', 'class': 'form-input'}),
             'store_type': forms.Select(attrs={'class': 'form-select'}),
             'is_available': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),  # ✅ تمت الإضافة هنا
         }

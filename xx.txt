@@ -3,5 +3,5 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "أول رفع للمشروع وربطه بـ GitHub"
+git commit -m "2"
 git push   

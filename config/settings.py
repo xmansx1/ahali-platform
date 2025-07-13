@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'ads',
     'core',
     'widget_tweaks',
+    
 ]
 
 MIDDLEWARE = [

@@ -245,6 +245,7 @@ from django.utils import timezone
 from .models import Order
 from stores.models import Store
 
+
 @csrf_protect
 def submit_store_order(request, store_id):
     store = get_object_or_404(Store, id=store_id)
@@ -261,13 +262,23 @@ def submit_store_order(request, store_id):
             messages.error(request, "يرجى تعبئة جميع الحقول المطلوبة.")
             return redirect('public_store_browser')
 
+        # ✅ محاولة تحويل الإحداثيات إلى float
+        try:
+            lat = float(location_lat) if location_lat else None
+            lng = float(location_lng) if location_lng else None
+        except ValueError:
+            lat = None
+            lng = None
+
         order = Order.objects.create(
             store=store,
             customer_name=full_name,
             customer_phone=phone_number,
             details=order_details,
             delivery_type=order_type,
-            customer_location=f"{location_lat},{location_lng}" if location_lat and location_lng else "",
+            customer_location=f"{location_lat},{location_lng}" if lat and lng else "",
+            latitude=lat,
+            longitude=lng,
             created_at=timezone.now(),
             status='new'
         )
@@ -277,7 +288,6 @@ def submit_store_order(request, store_id):
 
     messages.error(request, "طريقة الطلب غير صحيحة.")
     return redirect('public_store_browser')
-
 # ===============================
 # 📊 عدادات الطلبات للمشرف (JSON)
 # ===============================

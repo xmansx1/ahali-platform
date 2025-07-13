@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import User
+from django.conf import settings
 from stores.models import Store
 
 
@@ -16,34 +16,49 @@ class Order(models.Model):
         PICKUP = 'pickup', 'استلام من المحل'
         DELIVERY = 'delivery', 'توصيل'
 
-    # ✅ ربط الطلب بالمتجر
+    # ✅ المتجر المرتبط بالطلب
     store = models.ForeignKey(
         Store,
         on_delete=models.CASCADE,
-        related_name="direct_orders",  # ✅ اسم مختلف لمنع التعارض
+        related_name="direct_orders",
         verbose_name="المتجر"
     )
 
+    # ✅ بيانات العميل
     customer_name = models.CharField("اسم العميل", max_length=100)
     customer_phone = models.CharField("رقم الجوال", max_length=20)
     customer_location = models.CharField("الوصف النصي للموقع", max_length=255, blank=True)
-
     latitude = models.FloatField("خط العرض", null=True, blank=True)
     longitude = models.FloatField("خط الطول", null=True, blank=True)
 
+    # ✅ تفاصيل الطلب
     details = models.TextField("تفاصيل الطلب")
     notes = models.TextField("ملاحظات إضافية", blank=True)
 
+    # ✅ نوع الطلب (توصيل أو استلام)
     delivery_type = models.CharField(
         "نوع الطلب",
         max_length=20,
         choices=DeliveryType.choices
     )
+
+    # ✅ حالة الطلب
     status = models.CharField(
         "الحالة",
         max_length=20,
         choices=Status.choices,
         default=Status.NEW
+    )
+
+    # ✅ ربط الطلب بمندوب التوصيل
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_orders',
+        limit_choices_to={'user_type': 'delivery'},
+        verbose_name="المندوب"
     )
 
     created_at = models.DateTimeField("وقت الإنشاء", auto_now_add=True)
@@ -55,6 +70,23 @@ class Order(models.Model):
         verbose_name = "طلب"
         verbose_name_plural = "الطلبات"
         ordering = ['-created_at']
+
+    # ✅ خصائص للوصول للإحداثيات بسهولة في القالب
+    @property
+    def customer_latitude(self):
+        return self.latitude
+
+    @property
+    def customer_longitude(self):
+        return self.longitude
+
+    @property
+    def store_latitude(self):
+        return self.store.latitude if self.store and self.store.latitude else None
+
+    @property
+    def store_longitude(self):
+        return self.store.longitude if self.store and self.store.longitude else None
 
 
 class StoreOrder(models.Model):

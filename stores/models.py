@@ -6,6 +6,12 @@ class Store(models.Model):
         ('grocery', 'بقالة'),
         ('pharmacy', 'صيدلية'),
         ('restaurant', 'مطعم'),
+        ('sweets', 'حلويات'),
+        ('bakery', 'مخبوزات'),
+        ('services', 'سباكة و كهرباء'),
+        ('produce', 'خضار و فواكه'),
+        ('gifts', 'هدايا'),
+        ('coffee', 'كوفي'),
         ('other', 'أخرى'),
     ]
 
@@ -28,7 +34,7 @@ class Store(models.Model):
         verbose_name="نوع المتجر"
     )
     is_active = models.BooleanField(default=True, verbose_name="نشط؟")
-    is_available = models.BooleanField(default=True, verbose_name="متاح لاستقبال الطلبات؟")  # ✅ تمت إضافته
+    is_available = models.BooleanField(default=True, verbose_name="متاح لاستقبال الطلبات؟")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإضافة")
 
     def __str__(self):

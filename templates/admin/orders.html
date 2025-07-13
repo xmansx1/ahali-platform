@@ -5,7 +5,7 @@
 <div class="bg-white rounded-xl shadow p-6 mb-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">📦 الطلبات التي تم تسليمها</h2>
 
-  <!-- ✅ إحصائيات عليا -->
+  <!-- ✅ إحصائيات -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <div class="bg-blue-50 border-t-4 border-blue-600 rounded-lg p-4 shadow text-center">
       <h3 class="text-lg font-semibold text-blue-800">📦 عدد الطلبات المسلمة</h3>
@@ -28,30 +28,33 @@
       <select name="merchant" class="border border-gray-300 rounded px-3 py-2 focus:ring focus:border-blue-300 w-48">
         <option value="">اختر متجراً</option>
         {% for merchant in merchants %}
-          <option value="{{ merchant.id }}" {% if selected_merchant_id == merchant.id|stringformat:"s" %}selected{% endif %}>{{ merchant.username }}</option>
+          <option value="{{ merchant.id }}" {% if selected_merchant_id == merchant.id|stringformat:"s" %}selected{% endif %}>
+            {{ merchant.username }}
+          </option>
         {% endfor %}
       </select>
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-      <input type="date" name="date" value="{{ selected_date }}" class="border border-gray-300 rounded px-3 py-2 focus:ring focus:border-blue-300 w-48">
+      <label class="block text-sm font-medium text-gray-700 mb-1">من تاريخ</label>
+      <input type="date" name="date_from" value="{{ selected_date_from }}" class="border border-gray-300 rounded px-3 py-2 focus:ring focus:border-blue-300 w-48">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">إلى تاريخ</label>
+      <input type="date" name="date_to" value="{{ selected_date_to }}" class="border border-gray-300 rounded px-3 py-2 focus:ring focus:border-blue-300 w-48">
     </div>
 
     <div class="flex gap-2">
+      <!-- زر الفلترة -->
       <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition">
         🔍 تطبيق الفلاتر
       </button>
 
-      <!-- ✅ زر التصدير إلى Excel -->
-      <form method="get" action="" class="inline">
-        <input type="hidden" name="merchant" value="{{ selected_merchant_id }}">
-        <input type="hidden" name="date" value="{{ selected_date }}">
-        <input type="hidden" name="export" value="excel">
-        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow transition">
-          📤 تصدير Excel
-        </button>
-      </form>
+      <!-- زر التصدير -->
+      <button type="submit" name="export" value="excel" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded shadow transition">
+        📤 تصدير Excel
+      </button>
     </div>
   </form>
 

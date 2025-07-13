@@ -131,13 +131,47 @@ class AdminPasswordChangeForm(forms.Form):
 
 from accounts.models import User
 
+
 class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'phone_number', 'user_type', 'is_active']
-        labels = {
-            'username': 'الاسم',
-            'phone_number': 'رقم الجوال',
-            'user_type': 'نوع المستخدم',
-            'is_active': 'الحالة'
+        fields = [
+            'username',
+            'phone_number',
+            'user_type',           # ✅ إضافة نوع المستخدم
+            'store_location',
+            'store_latitude',
+            'store_longitude',
+            'is_active',
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'اسم المستخدم'
+            }),
+            'phone_number': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'مثال: 0551234567'
+            }),
+            'user_type': forms.Select(attrs={
+                'class': 'w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+            }),
+            'store_location': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الحي، المدينة'
+            }),
+            'store_latitude': forms.HiddenInput(),
+            'store_longitude': forms.HiddenInput(),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox text-blue-600 rounded',
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
+        # ✅ تحسين النصوص الظاهرة للعربية
+        self.fields['username'].label = "اسم المستخدم"
+        self.fields['phone_number'].label = "رقم الجوال"
+        self.fields['user_type'].label = "نوع المستخدم"
+        self.fields['store_location'].label = "عنوان المتجر"
+        self.fields['is_active'].label = "تفعيل المستخدم"
