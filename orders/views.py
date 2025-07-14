@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils.http import urlencode
 from django.template.loader import render_to_string
 from datetime import datetime
+from orders.utils import format_whatsapp_number
 
 from .models import Order
 from accounts.models import User
@@ -53,7 +54,11 @@ def merchant_dashboard(request):
         messages.error(request, "لم يتم العثور على متجر مرتبط بهذا الحساب.")
         return redirect('home')
 
-    orders = Order.objects.filter(store=store).order_by('-created_at')
+    # ✅ فلترة الطلبات مع استبعاد الحالات المنتهية أو المحذوفة
+    orders = Order.objects.filter(
+        store=store
+    ).exclude(status__in=['delivered', 'canceled', 'deleted']).order_by('-created_at')
+
     status_counts = get_order_status_counts(request.user)
 
     return render(request, 'orders/merchant_dashboard.html', {
@@ -61,11 +66,10 @@ def merchant_dashboard(request):
         'status_counts': status_counts,
         'store': store,
     })
-
-
 # ===============================
 # 🔁 جزء الطلبات (AJAX)
 # ===============================
+
 @login_required
 def merchant_orders_partial(request):
     if request.user.user_type != 'merchant':
@@ -76,10 +80,15 @@ def merchant_orders_partial(request):
     except Store.DoesNotExist:
         return JsonResponse({'error': 'لا يوجد متجر مرتبط بالحساب'}, status=404)
 
-    orders = Order.objects.filter(store=store).exclude(status__in=['delivered', 'canceled', 'deleted']).order_by('-created_at')
-    
-    return render(request, 'orders/order_list_partial.html', {'orders': orders})
+    orders = Order.objects.filter(
+        store=store
+    ).exclude(
+        status__in=['delivered', 'canceled', 'deleted']
+    ).select_related(
+        'assigned_to'  # ✅ تحميل بيانات المندوب كاملة (بما في ذلك phone_number)
+    ).order_by('-created_at')
 
+    return render(request, 'orders/order_list_partial.html', {'orders': orders})
 
 # ===============================
 # 📊 عدادات الطلبات (JSON)
@@ -145,7 +154,11 @@ def update_order_status(request, order_id):
             "شكرًا لتسوقك معنا!"
         )
         params = urlencode({'text': message})
-        whatsapp_url = f"https://wa.me/{order.customer_phone}?{params}"
+
+        # ✅ تحويل الرقم إلى تنسيق واتساب الدولي (966)
+        phone = format_whatsapp_number(order.customer_phone)
+
+        whatsapp_url = f"https://wa.me/{phone}?{params}"
         order.status = new_status
         order.save()
         return HttpResponseRedirect(whatsapp_url)

@@ -1,159 +1,136 @@
 {% load order_extras %}
-{% for order in orders %}
-<div class="order-card bg-white border border-gray-200 rounded-lg shadow-md p-4 mb-5 relative transition hover:shadow-lg">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
-        <p>
-            <strong>العميل:</strong> {{ order.customer_name }} |
-            <a href="https://wa.me/{{ order.customer_phone|whatsapp_number }}" target="_blank" class="text-green-600 hover:underline">
-                {{ order.customer_phone|whatsapp_number }} 💬
-            </a>
-        </p>
-        <p><strong>نوع التوصيل:</strong> {{ order.get_delivery_type_display }}</p>
-        <p><strong>الطلب:</strong> {{ order.details }}</p>
-        <p><strong>الموقع:</strong> {{ order.customer_location }}</p>
-        <p>
-            <strong>الحالة الحالية:</strong>
-            <span class="inline-block px-2 py-1 rounded text-xs font-medium
-                {% if order.status == 'preparing' %} bg-yellow-100 text-yellow-800
-                {% elif order.status == 'delivering' %} bg-blue-100 text-blue-800
-                {% elif order.status == 'delivered' %} bg-green-100 text-green-800
-                {% elif order.status == 'canceled' %} bg-red-100 text-red-800
-                {% elif order.status == 'deleted' %} bg-gray-200 text-gray-800
-                {% endif %}">
-                {{ order.get_status_display }}
-            </span>
-        </p>
-    </div>
+<div id="orders-list">
+  {% for order in orders %}
+    <div class="order-card bg-white border border-gray-200 rounded-xl shadow-md p-5 mb-6 hover:shadow-lg transition-all duration-300 relative"
+         data-order-id="{{ order.id }}"
+         data-customer-lat="{{ order.latitude }}"
+         data-customer-lng="{{ order.longitude }}"
+         data-store-lat="{{ order.store.latitude|default:"0" }}"
+         data-store-lng="{{ order.store.longitude|default:"0" }}">
 
-    <!-- ✅ زر عرض التفاصيل -->
-    <div class="mt-4">
+      <!-- ✅ معلومات الطلب -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 leading-relaxed">
+
+        <p>
+          <strong>👤 العميل:</strong> {{ order.customer_name }}
+          {% if order.customer_phone %}
+            | <a href="https://wa.me/{{ order.customer_phone|whatsapp_number }}" target="_blank"
+                 class="text-green-600 hover:underline">واتساب 💬</a>
+          {% endif %}
+        </p>
+
+        <p><strong>📦 نوع التوصيل:</strong> {{ order.get_delivery_type_display }}</p>
+        <p><strong>🛒 تفاصيل الطلب:</strong> {{ order.details }}</p>
+
+        <p>
+          <strong>📍 الموقع:</strong>
+          {% if order.customer_location %}
+            {{ order.customer_location }}
+            {% if order.latitude and order.longitude %}
+              <a href="https://maps.google.com/?q={{ order.latitude }},{{ order.longitude }}" target="_blank"
+                 class="text-blue-600 hover:underline ml-1">انتقل ↗</a>
+            {% endif %}
+          {% else %}
+            <span class="text-gray-400">غير محدد</span>
+          {% endif %}
+        </p>
+
+        {% if order.invoice_amount %}
+          <p><strong>💰 المبلغ:</strong> {{ order.invoice_amount }} ريال</p>
+        {% endif %}
+
+        <p>
+          <strong>📌 الحالة:</strong>
+          <span class="inline-block px-2 py-1 rounded-full text-xs font-bold
+            {% if order.status == 'preparing' %} bg-yellow-100 text-yellow-800
+            {% elif order.status == 'delivering' %} bg-blue-100 text-blue-800
+            {% elif order.status == 'delivered' %} bg-green-100 text-green-800
+            {% elif order.status == 'canceled' %} bg-red-100 text-red-800
+            {% elif order.status == 'deleted' %} bg-gray-300 text-gray-800
+            {% endif %}">
+            {{ order.get_status_display }}
+          </span>
+        </p>
+
+        {% if order.assigned_to %}
+          <p>
+            <strong>🚴‍♂️ المندوب:</strong>
+            {{ order.assigned_to.get_full_name|default:order.assigned_to.username }}
+            {% if order.assigned_to.phone_number %}
+              | {{ order.assigned_to.phone_number }}
+              <a href="https://wa.me/{{ order.assigned_to.phone_number|whatsapp_number }}" target="_blank"
+                 class="text-green-600 hover:underline ml-1">واتساب 💬</a>
+            {% else %}
+              <span class="text-gray-400">لا يوجد رقم</span>
+            {% endif %}
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- ✅ الإجراءات -->
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mt-6 border-t pt-4">
+
+        <!-- زر عرض التفاصيل -->
         <button onclick="showOrderDetails({{ order.id }})"
                 class="text-sm text-blue-600 hover:underline transition">
-            عرض التفاصيل →
+          عرض التفاصيل →
         </button>
+
+        <!-- ✅ نموذج تغيير الحالة -->
+        <form method="post" action="{% url 'update_order_status' order.id %}" class="flex flex-wrap gap-3 items-center">
+          {% csrf_token %}
+
+          <select name="status"
+                  class="status-select border border-gray-300 rounded px-3 py-2 text-sm"
+                  data-order-id="{{ order.id }}">
+            <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>قيد التجهيز</option>
+            <option value="delivering" {% if order.status == 'delivering' %}selected{% endif %}>قيد التوصيل</option>
+            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>تم التسليم</option>
+            <option value="canceled" {% if order.status == 'canceled' %}selected{% endif %}>ملغي</option>
+            <option value="deleted" {% if order.status == 'deleted' %}selected{% endif %}>محذوف</option>
+          </select>
+
+          <input type="number"
+                 step="0.01"
+                 name="invoice_amount"
+                 id="invoice-{{ order.id }}"
+                 class="invoice-input border border-gray-300 rounded px-3 py-2 text-sm {% if order.status != 'delivering' %}hidden{% endif %}"
+                 placeholder="مبلغ الفاتورة"
+                 {% if order.status == 'delivering' %}required{% endif %}>
+
+          <button type="submit"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+            تحديث
+          </button>
+        </form>
+      </div>
     </div>
-
-    <!-- ✅ نموذج تحديث الحالة -->
-    <form method="post" action="{% url 'update_order_status' order.id %}" class="mt-4">
-        {% csrf_token %}
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <select name="status"
-                    class="status-select border border-gray-300 rounded px-2 py-1 text-sm"
-                    data-order-id="{{ order.id }}">
-                <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>قيد التجهيز</option>
-                <option value="delivering" {% if order.status == 'delivering' %}selected{% endif %}>قيد التوصيل</option>
-                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>تم التسليم</option>
-                <option value="canceled" {% if order.status == 'canceled' %}selected{% endif %}>ملغي</option>
-                <option value="deleted" {% if order.status == 'deleted' %}selected{% endif %}>محذوف</option>
-            </select>
-
-            <input type="number"
-                   step="0.01"
-                   name="invoice_amount"
-                   id="invoice-{{ order.id }}"
-                   class="invoice-input border border-gray-300 rounded px-2 py-1 text-sm {% if order.status != 'delivering' %}hidden{% endif %}"
-                   placeholder="مبلغ الفاتورة"
-                   {% if order.status == 'delivering' %}required{% endif %}>
-
-            <button type="submit"
-                    class="bg-blue-600 text-white rounded px-4 py-1 text-sm hover:bg-blue-700 transition">
-                تحديث الحالة
-            </button>
-        </div>
-    </form>
-</div>
-{% empty %}
-<p class="text-gray-500 text-center">لا توجد طلبات حالياً.</p>
-{% endfor %}
-
-<!-- ✅ نافذة التفاصيل -->
-<div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg relative">
-        <button onclick="closeModal()" class="absolute top-2 left-2 text-gray-600 hover:text-black text-xl">✕</button>
-        <div id="order-modal-content" class="text-sm text-gray-800">
-            <p>جارٍ تحميل التفاصيل...</p>
-        </div>
-    </div>
+  {% empty %}
+    <p class="text-center text-gray-500">لا توجد طلبات حالياً.</p>
+  {% endfor %}
 </div>
 
+<!-- ✅ تحديث بيانات الخريطة بعد التحديث -->
 <script>
-function setupStatusListeners() {
-    document.querySelectorAll('.status-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const orderId = this.dataset.orderId;
-            const invoiceInput = document.getElementById('invoice-' + orderId);
+  window.updateOrdersData = function () {
+    window.ordersData = {};
+    document.querySelectorAll('[data-order-id]').forEach(card => {
+      const id = card.dataset.orderId;
+      const lat = parseFloat(card.dataset.customerLat);
+      const lng = parseFloat(card.dataset.customerLng);
+      const storeLat = parseFloat(card.dataset.storeLat);
+      const storeLng = parseFloat(card.dataset.storeLng);
 
-            if (this.value === 'delivering') {
-                invoiceInput.classList.remove('hidden');
-                invoiceInput.required = true;
-            } else {
-                invoiceInput.classList.add('hidden');
-                invoiceInput.required = false;
-            }
-        });
+      if (!isNaN(lat) && !isNaN(lng)) {
+        window.ordersData[id] = {
+          customer_latitude: lat,
+          customer_longitude: lng,
+          store_latitude: storeLat,
+          store_longitude: storeLng,
+        };
+      }
     });
+  };
 
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            const select = form.querySelector('.status-select');
-            const status = select.value;
-            if (status === 'canceled' || status === 'deleted') {
-                if (!confirm('⚠️ هل أنت متأكد من تنفيذ هذا الإجراء؟')) {
-                    e.preventDefault();
-                }
-            }
-        });
-    });
-}
-
-function showOrderDetails(orderId) {
-    isModalOpen = true;
-    const modal = document.getElementById('order-modal');
-    const content = document.getElementById('order-modal-content');
-
-    modal.classList.remove('hidden');
-    content.innerHTML = '<p>جارٍ تحميل التفاصيل...</p>';
-
-    fetch(`/orders/${orderId}/detail/`)
-        .then(response => response.text())
-        .then(html => {
-            content.innerHTML = html;
-        })
-        .catch(() => {
-            content.innerHTML = '<p class="text-red-500">حدث خطأ أثناء تحميل التفاصيل.</p>';
-        });
-}
-
-function closeModal() {
-    document.getElementById('order-modal').classList.add('hidden');
-    isModalOpen = false;
-}
-
-function refreshOrders() {
-    if (isModalOpen) return;
-
-    fetch("{% url 'merchant_orders_partial' %}")
-        .then(response => response.text())
-        .then(html => {
-            const tempDiv = document.createElement("div");
-            tempDiv.innerHTML = html;
-            const newOrders = tempDiv.querySelectorAll('.order-card');
-
-            if (lastOrderCount !== null && newOrders.length > lastOrderCount) {
-                alertSound.play();
-                newOrders[0].classList.add("ring", "ring-green-400", "animate-pulse");
-                setTimeout(() => {
-                    newOrders[0].classList.remove("ring", "ring-green-400", "animate-pulse");
-                }, 4000);
-            }
-
-            lastOrderCount = newOrders.length;
-            document.getElementById("orders-container").innerHTML = html;
-            setupStatusListeners();
-        });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    setupStatusListeners();
-});
+  window.updateOrdersData();
 </script>

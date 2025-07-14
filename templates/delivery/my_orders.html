@@ -19,6 +19,7 @@
     <div class="border border-gray-200 rounded-xl shadow-sm p-5 mb-6 bg-gray-50 hover:bg-gray-100 transition-all duration-200">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 leading-relaxed">
 
+        <!-- 👤 بيانات العميل -->
         <div>
           <p><strong>👤 العميل:</strong> {{ order.customer_name }}</p>
           {% if order.customer_phone %}
@@ -29,12 +30,12 @@
         <p><strong>💵 المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
         <p><strong>📝 تفاصيل الطلب:</strong> {{ order.details }}</p>
 
+        <!-- 📍 موقع العميل -->
         <p class="flex items-center gap-1">
           <strong>📍 موقع العميل:</strong>
           {% if order.customer_latitude and order.customer_longitude %}
             <a href="https://www.google.com/maps?q={{ order.customer_latitude }},{{ order.customer_longitude }}"
-               target="_blank" class="text-blue-600 hover:underline"
-               title="فتح موقع العميل على خرائط Google">
+               target="_blank" class="text-blue-600 hover:underline">
               🔗 انتقل
             </a>
           {% else %}
@@ -42,12 +43,12 @@
           {% endif %}
         </p>
 
+        <!-- 📌 موقع المتجر -->
         <p class="flex items-center gap-1">
           <strong>📌 موقع المتجر:</strong>
           {% if order.store_latitude and order.store_longitude %}
             <a href="https://www.google.com/maps?q={{ order.store_latitude }},{{ order.store_longitude }}"
-               target="_blank" class="text-blue-600 hover:underline"
-               title="فتح موقع المتجر على خرائط Google">
+               target="_blank" class="text-blue-600 hover:underline">
               🔗 انتقل
             </a>
           {% else %}
@@ -55,6 +56,7 @@
           {% endif %}
         </p>
 
+        <!-- 🏪 اسم المتجر -->
         <p>
           <strong>🏪 المتجر:</strong>
           {{ order.store.name|default:"اسم غير متوفر" }}
@@ -66,27 +68,51 @@
 
       <!-- ✅ الإجراءات -->
       <div class="flex flex-wrap gap-3 mt-5">
+
+        <!-- تم التوصيل -->
         <a href="{% url 'complete_order' order.id %}"
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition">
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
           ✅ تم التوصيل
         </a>
 
+        <!-- اتصال + واتساب برسالة مخصصة -->
         {% if order.customer_phone %}
           <a href="tel:{{ order.customer_phone }}"
-             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
             📞 اتصال
           </a>
 
-          <a href="https://wa.me/{{ order.customer_phone|slice:'-9:' }}"
-             target="_blank"
-             class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm transition">
-            💬 واتساب
-          </a>
+          {% with order.customer_phone as raw_phone %}
+            {% if raw_phone|slice:":1" == "0" %}
+              {% with "966"|add:raw_phone|slice:"1:" as whatsapp_number %}
+                {% with 'طلبك من متجر ' as pre %}
+                  {% with pre|add:order.store.name|add:' في طريقه إليك 🚚' as message %}
+                    <a href="https://wa.me/{{ whatsapp_number }}?text={{ message|urlencode }}"
+                       target="_blank"
+                       class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                      💬 واتساب
+                    </a>
+                  {% endwith %}
+                {% endwith %}
+              {% endwith %}
+            {% else %}
+              {% with 'طلبك من متجر ' as pre %}
+                {% with pre|add:order.store.name|add:' في طريقه إليك 🚚' as message %}
+                  <a href="https://wa.me/{{ raw_phone }}?text={{ message|urlencode }}"
+                     target="_blank"
+                     class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                    💬 واتساب
+                  </a>
+                {% endwith %}
+              {% endwith %}
+            {% endif %}
+          {% endwith %}
         {% endif %}
 
+        <!-- عرض الخريطة -->
         {% if order.customer_latitude and order.customer_longitude and order.store_latitude and order.store_longitude %}
           <button onclick="showMap({{ order.id }})"
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm transition">
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition">
             🗺️ عرض الخريطة
           </button>
         {% else %}
@@ -100,75 +126,4 @@
     <p class="text-center text-gray-500 mt-10">لا توجد طلبات حالياً قيد التوصيل.</p>
   {% endfor %}
 </div>
-
-<!-- ✅ Modal الخريطة -->
-<div id="map-modal"
-     class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-4 relative">
-    <button onclick="closeMapModal()"
-            class="absolute top-2 left-2 text-gray-600 hover:text-black text-xl">✕</button>
-    <h3 class="text-lg font-semibold mb-3 text-gray-800">🗺️ خريطة الطلب</h3>
-    <div id="map-container" class="h-72 rounded border"></div>
-  </div>
-</div>
-
-<!-- ✅ JavaScript -->
-<script>
-  function showMap(orderId) {
-    const order = window.ordersData[orderId];
-    if (!order) return alert("لا توجد بيانات للطلب");
-
-    document.getElementById("map-modal").classList.remove("hidden");
-
-    if (window.mapInstance) {
-      window.mapInstance.remove();
-    }
-
-    const map = L.map("map-container").setView([order.customer_latitude, order.customer_longitude], 13);
-    window.mapInstance = map;
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(map);
-
-    const clientIcon = L.icon({
-      iconUrl: "https://cdn-icons-png.flaticon.com/512/535/535239.png",
-      iconSize: [30, 30],
-      iconAnchor: [15, 30],
-    });
-
-    const storeIcon = L.icon({
-      iconUrl: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
-      iconSize: [30, 30],
-      iconAnchor: [15, 30],
-    });
-
-    L.marker([order.customer_latitude, order.customer_longitude], { icon: clientIcon })
-      .addTo(map).bindPopup("📍 موقع العميل");
-
-    if (order.store_latitude && order.store_longitude) {
-      L.marker([order.store_latitude, order.store_longitude], { icon: storeIcon })
-        .addTo(map).bindPopup("🏪 موقع المتجر");
-    }
-  }
-
-  function closeMapModal() {
-    document.getElementById("map-modal").classList.add("hidden");
-  }
-
-  window.ordersData = {
-    {% for order in orders %}
-      {% if order.customer_latitude and order.customer_longitude %}
-        {{ order.id }}: {
-          customer_latitude: {{ order.customer_latitude }},
-          customer_longitude: {{ order.customer_longitude }},
-          {% if order.store_latitude and order.store_longitude %}
-          store_latitude: {{ order.store_latitude }},
-          store_longitude: {{ order.store_longitude }},
-          {% endif %}
-        },
-      {% endif %}
-    {% endfor %}
-  };
-</script>
 {% endblock %}

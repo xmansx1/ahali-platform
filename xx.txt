@@ -3,5 +3,5 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "2"
+git commit -m "4"
 git push   

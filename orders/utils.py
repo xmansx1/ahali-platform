@@ -20,3 +20,19 @@ def get_order_status_counts(user):
         'canceled': Order.objects.filter(store=store, status='canceled').count(),
         'deleted': Order.objects.filter(store=store, status='deleted').count(),
     }
+
+def format_whatsapp_number(number):
+    """
+    يحول الرقم من 05xxxxxxxx أو +966xxxxxxxx إلى 966xxxxxxxx
+    """
+    if not number:
+        return ""
+    number = number.strip().replace(" ", "").replace("-", "")
+    
+    if number.startswith('05'):
+        return '966' + number[1:]
+    elif number.startswith('+966'):
+        return number[1:]
+    elif number.startswith('966'):
+        return number
+    return number

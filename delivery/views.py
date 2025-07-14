@@ -116,3 +116,4 @@ def delivery_settings(request):
 
     form = DeliverySettingsForm(instance=user)
     return render(request, 'delivery/settings.html', {'form': form})
+

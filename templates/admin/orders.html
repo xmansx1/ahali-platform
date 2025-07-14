@@ -28,9 +28,10 @@
       <select name="merchant" class="border border-gray-300 rounded px-3 py-2 focus:ring focus:border-blue-300 w-48">
         <option value="">اختر متجراً</option>
         {% for merchant in merchants %}
-          <option value="{{ merchant.id }}" {% if selected_merchant_id == merchant.id|stringformat:"s" %}selected{% endif %}>
-            {{ merchant.username }}
-          </option>
+<option value="{{ merchant.id }}" {% if selected_merchant_id == merchant.id|stringformat:"s" %}selected{% endif %}>
+  {{ merchant.store.name|default:"اسم المتجر غير متوفر" }}
+</option>
+
         {% endfor %}
       </select>
     </div>
