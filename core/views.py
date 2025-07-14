@@ -1,7 +1,14 @@
 from django.shortcuts import render
+from ads.models import Advertisement
 
 def home(request):
-    return render(request, 'core/home.html')
+    ads = Advertisement.objects.filter(is_active=True).order_by('-id')[:6]
+
+    return render(request, 'core/home.html', {
+        'ads': ads
+    })
+    
+    
 from django.shortcuts import render
 from django.db.models import Q
 from stores.models import Store  # تأكد من الاستيراد

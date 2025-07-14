@@ -1,0 +1,57 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}إضافة إعلان جديد{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8 bg-white rounded-xl shadow">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">➕ إضافة إعلان جديد</h1>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- 📝 العنوان -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">عنوان الإعلان</label>
+      {{ form.title }}
+      {{ form.title.errors }}
+    </div>
+
+    <!-- 🧾 نص الإعلان -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">نص الإعلان</label>
+      {{ form.text }}
+      {{ form.text.errors }}
+    </div>
+
+    <!-- 🌐 الرابط -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">رابط التحويل (اختياري)</label>
+      {{ form.link }}
+      {{ form.link.errors }}
+    </div>
+
+    <!-- 🖼️ الصورة -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">صورة الإعلان</label>
+      {{ form.image }}
+      {{ form.image.errors }}
+    </div>
+
+    <!-- ✅ التفعيل -->
+    <div class="flex items-center gap-2">
+      {{ form.is_active }}
+      <label class="text-sm text-gray-700">تفعيل الإعلان</label>
+    </div>
+
+    <!-- 💾 زر الحفظ -->
+    <div class="flex gap-4">
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+        💾 حفظ الإعلان
+      </button>
+      <a href="{% url 'ads:admin_ads_list' %}" class="text-gray-600 hover:underline">↩️ الرجوع للقائمة</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -36,4 +36,5 @@ urlpatterns = [
 
     # ✅ صفحة اختبار مؤقتة
     path('test/', lambda request: HttpResponse("صفحة حسابات الاختبار")),
-]
+    
+ ]

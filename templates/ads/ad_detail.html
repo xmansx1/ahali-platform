@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}تفاصيل الإعلان{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10 bg-white shadow rounded-xl">
+  {% if ad.image %}
+  <img src="{{ ad.image.url }}" alt="{{ ad.title }}" class="w-full h-64 object-cover rounded-t-xl mb-6">
+  {% endif %}
+
+  <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ ad.title }}</h1>
+
+  {% if ad.text %}
+  <p class="text-gray-700 text-lg leading-relaxed mb-6">
+    {{ ad.text }}
+  </p>
+  {% endif %}
+
+  {% if ad.link %}
+  <a href="{{ ad.link }}" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+    🌐 زيارة الرابط
+  </a>
+  {% endif %}
+
+  <div class="mt-6">
+    <a href="{% url 'home' %}" class="text-sm text-gray-500 hover:underline">↩️ العودة للرئيسية</a>
+  </div>
+</div>
+{% endblock %}
