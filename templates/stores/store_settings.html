@@ -16,7 +16,7 @@
   {% endif %}
 
   <!-- ✅ نموذج تحديث بيانات المتجر -->
-  <form method="POST" action="" class="space-y-4 mb-10">
+  <form method="POST" action="" class="space-y-5 mb-10">
     {% csrf_token %}
 
     <!-- رقم الجوال -->
@@ -40,33 +40,32 @@
     {{ form.latitude }}
     {{ form.longitude }}
 
-    <!-- توفر المتجر -->
-<div class="flex items-center gap-2">
-  <input type="hidden" name="is_available" value="off">
-  <input type="checkbox"
-         id="id_is_available"
-         name="is_available"
-         value="on"
-         {% if form.instance.is_available %}checked{% endif %}
-         class="h-4 w-4 text-green-600 border-gray-300 rounded">
-  <label for="id_is_available" class="text-sm text-gray-700">متاح لاستقبال الطلبات</label>
-</div>
+    <!-- ✅ checkbox متاح لاستقبال الطلبات -->
+    <div class="flex items-center gap-2">
+      <input type="hidden" name="is_available" value="off">
+      <input type="checkbox"
+             id="id_is_available"
+             name="is_available"
+             value="on"
+             {% if form.instance.is_available %}checked{% endif %}
+             class="h-4 w-4 text-green-600 border-gray-300 rounded">
+      <label for="id_is_available" class="text-sm text-gray-700">متاح لاستقبال الطلبات</label>
+    </div>
 
-<!-- زر الحفظ -->
-<button type="submit" name="save_settings" value="1"
-        class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium">
-  💾 حفظ التغييرات
-</button>
+    <!-- زر الحفظ -->
+    <button type="submit" name="save_settings" value="1"
+            class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium">
+      💾 حفظ التغييرات
+    </button>
   </form>
 
   <hr class="my-8">
 
-  <!-- ✅ نموذج تغيير كلمة المرور -->
+  <!-- ✅ تغيير كلمة المرور -->
   <h3 class="text-xl font-semibold text-gray-800 mb-4">🔒 تغيير كلمة المرور</h3>
   <form method="POST" action="">
     {% csrf_token %}
     <input type="hidden" name="change_password" value="1">
-
     {{ pass_form.non_field_errors }}
 
     <div class="space-y-4">

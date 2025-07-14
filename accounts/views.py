@@ -43,6 +43,7 @@ def home_redirect(request):
 from stores.models import Store
 from django.views.decorators.http import require_POST
 from ads.models import Advertisement
+
 @login_required
 def admin_dashboard(request):
     if request.user.user_type != 'admin':
@@ -53,7 +54,7 @@ def admin_dashboard(request):
     delivering_orders = Order.objects.filter(status='delivering').count()
     merchants = User.objects.filter(user_type='merchant').count()
     delivery_users = User.objects.filter(user_type='delivery').count()
-    ads_count = Advertisement.objects.filter()  # ✅ عدد الإعلانات
+    ads_count = Advertisement.objects.count()  # ✅ تم تصحيحه
 
     # 🟠 المتاجر غير النشطة
     inactive_stores = Store.objects.filter(is_active=False)
@@ -63,10 +64,9 @@ def admin_dashboard(request):
         'delivering_orders': delivering_orders,
         'merchants': merchants,
         'delivery_users': delivery_users,
-        'ads_count': ads_count,  # ✅ مررها للقالب
+        'ads_count': ads_count,
         'inactive_stores': inactive_stores,
     })
-    
     
 # ✅ لتفعيل المتجر
 @require_POST

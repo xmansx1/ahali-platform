@@ -30,9 +30,13 @@ class StoreSettingsForm(forms.ModelForm):
             }),
         }
 
-    # ✅ طريقة أكثر موثوقية للتعامل مع الحقل checkbox عند عدم التفعيل (unchecked)
-    def clean_is_available(self):
-        return self.cleaned_data.get('is_available', False)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.data:
+            self.data = self.data.copy()
+            # 👇 تحويل string إلى Boolean
+            is_available = self.data.get('is_available')
+            self.data['is_available'] = is_available == 'on'
 
 
 class PasswordChangeForm(forms.Form):
