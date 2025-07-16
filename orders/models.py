@@ -127,3 +127,21 @@ class StoreOrder(models.Model):
         verbose_name = "طلب متجر"
         verbose_name_plural = "طلبات المتاجر"
         ordering = ['-created_at']
+
+
+from django.db import models
+from django.conf import settings
+
+class DeliveryPayment(models.Model):
+    order = models.OneToOneField('orders.Order', on_delete=models.CASCADE, related_name='delivery_payment')
+    paid_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='payments_made')  # التاجر
+    paid_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='payments_received')  # المندوب
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    payment_method = models.CharField(max_length=10, choices=[
+        ('cash', 'كاش'),
+        ('transfer', 'تحويل')
+    ])
+    paid_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.order} | {self.amount} ريال ({self.get_payment_method_display()})"

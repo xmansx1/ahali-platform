@@ -1,0 +1,72 @@
+{% extends "core/base.html" %}
+{% block title %}سجل المدفوعات{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-6 bg-white rounded-xl shadow">
+
+  <!-- العنوان -->
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+    📄 سجل المدفوعات للمندوبين
+  </h2>
+
+  <!-- فلترة -->
+  <form method="get" class="flex flex-wrap gap-4 items-end mb-6">
+    <div>
+      <label class="text-sm text-gray-600 mb-1 block">📅 من تاريخ</label>
+      <input type="date" name="from_date" value="{{ from_date }}" class="border rounded px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="text-sm text-gray-600 mb-1 block">📅 إلى تاريخ</label>
+      <input type="date" name="to_date" value="{{ to_date }}" class="border rounded px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="text-sm text-gray-600 mb-1 block">🧍‍♂️ اسم المندوب</label>
+      <select name="delivery_id" class="border rounded px-3 py-2 text-sm">
+        <option value="">الكل</option>
+        {% for user in delivery_users %}
+          <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_delivery_id %}selected{% endif %}>{{ user.get_full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+      🔍 تطبيق الفلتر
+    </button>
+  </form>
+
+  <!-- جدول المدفوعات -->
+  {% if payments %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-gray-800 border border-gray-200 rounded-lg">
+        <thead class="bg-gray-100 text-gray-700 font-medium">
+          <tr>
+            <th class="px-4 py-2 text-right">#</th>
+            <th class="px-4 py-2 text-right">اسم المندوب</th>
+            <th class="px-4 py-2 text-right">مبلغ الدفع</th>
+            <th class="px-4 py-2 text-right">طريقة الدفع</th>
+            <th class="px-4 py-2 text-right">تاريخ الدفع</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+            <tr class="border-t">
+              <td class="px-4 py-2">{{ forloop.counter }}</td>
+              <td class="px-4 py-2">{{ payment.paid_to.get_full_name }}</td>
+              <td class="px-4 py-2">{{ payment.amount }} ريال</td>
+              <td class="px-4 py-2">{{ payment.get_payment_method_display }}</td>
+              <td class="px-4 py-2">{{ payment.paid_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-gray-100 font-semibold">
+          <tr>
+            <td colspan="2" class="px-4 py-2 text-right">الإجمالي</td>
+            <td colspan="3" class="px-4 py-2 text-right text-green-700">{{ total_paid }} ريال</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-sm text-center mt-10">لا توجد مدفوعات مطابقة للفلاتر.</p>
+  {% endif %}
+</div>
+{% endblock %}

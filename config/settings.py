@@ -122,13 +122,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# اللغة الافتراضية للمشروع (العربية)
+LANGUAGE_CODE = 'ar'
 
-TIME_ZONE = 'UTC'
+# المنطقة الزمنية للرياض
+TIME_ZONE = 'Asia/Riyadh'
 
+# تفعيل الترجمة
 USE_I18N = True
 
+# تفعيل التوقيت المحلي
+USE_L10N = True
+
+# استخدام التوقيت المحلي بدلاً من UTC في التعامل مع التواريخ
 USE_TZ = True
+
 LOGOUT_REDIRECT_URL = '/'
 
 # Static files (CSS, JavaScript, Images)

@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% block title %}دفع مستحقات المندوب{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto p-4 bg-white rounded-xl shadow-md">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">💳 دفع مستحقات المندوب</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-4 p-3 rounded text-sm font-medium {{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if orders %}
+    <div class="space-y-6">
+      {% for order in orders %}
+        <form method="post" class="bg-gray-50 border border-gray-200 p-5 rounded-xl shadow-sm">
+          {% csrf_token %}
+          <input type="hidden" name="order_id" value="{{ order.id }}">
+          <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-800">
+            <p>👤 المندوب: {{ order.assigned_to.get_full_name|default:order.assigned_to.username }}</p>
+            <p>💰 المبلغ: {{ order.invoice_amount }} ريال</p>
+            <p>📦 الطلب: {{ order.details }}</p>
+            <p>⏰ وقت التسليم: {{ order.created_at|date:"Y-m-d H:i" }}</p>
+          </div>
+          <div class="mt-4 flex items-center gap-4">
+            <select name="payment_method" required class="border rounded px-3 py-1.5 text-sm">
+              <option value="">اختر طريقة الدفع</option>
+              <option value="cash">كاش</option>
+              <option value="transfer">تحويل</option>
+            </select>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+              💸 تسجيل الدفع
+            </button>
+          </div>
+        </form>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-center mt-10">لا توجد طلبات بحاجة للدفع حالياً.</p>
+  {% endif %}
+</div>
+{% endblock %}

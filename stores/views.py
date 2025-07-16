@@ -58,3 +58,83 @@ def store_settings(request):
         'form': form,
         'pass_form': pass_form
     })
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from orders.models import Order, DeliveryPayment
+from datetime import datetime
+
+@login_required
+def merchant_payments(request):
+    if request.user.user_type != 'merchant':
+        return redirect('home')
+
+    # جلب الطلبات المسلمة التي لم يتم دفع مستحقاتها بعد
+    orders = Order.objects.filter(
+        store__user=request.user,
+        status='delivered',
+        assigned_to__isnull=False,
+        delivery_payment__isnull=True
+    ).select_related('assigned_to', 'store')
+
+    if request.method == "POST":
+        order_id = request.POST.get("order_id")
+        payment_method = request.POST.get("payment_method")
+        order = get_object_or_404(Order, id=order_id, store__user=request.user)
+
+        DeliveryPayment.objects.create(
+            order=order,
+            paid_by=request.user,
+            paid_to=order.assigned_to,
+            amount=10,
+            payment_method=payment_method
+        )
+        messages.success(request, f"✅ تم دفع مستحقات المندوب {order.assigned_to.get_full_name()} بنجاح.")
+        return redirect('merchant_payments')
+
+    return render(request, 'stores/payments.html', {'orders': orders})
+
+from django.db.models import Q, Sum
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from accounts.models import User
+from orders.models import DeliveryPayment
+
+@login_required
+def merchant_payment_history(request):
+    if request.user.user_type != 'merchant':
+        return redirect('home')
+
+    # استلام قيم الفلترة
+    delivery_id = request.GET.get("delivery_id")
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+
+    filters = Q(paid_by=request.user)
+
+    if delivery_id and delivery_id.isdigit():
+        filters &= Q(paid_to__id=int(delivery_id))
+
+    if from_date:
+        filters &= Q(paid_at__date__gte=from_date)
+
+    if to_date:
+        filters &= Q(paid_at__date__lte=to_date)
+
+    payments = DeliveryPayment.objects.filter(filters).select_related('paid_to', 'order', 'order__store')
+
+    total_paid = payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    delivery_users = User.objects.filter(user_type='delivery', is_active=True)
+
+    context = {
+        "payments": payments.order_by('-paid_at'),
+        "total_paid": total_paid,
+        "delivery_users": delivery_users,
+        "selected_delivery_id": delivery_id,
+        "from_date": from_date,
+        "to_date": to_date,
+    }
+
+    return render(request, "stores/payment_history.html", context)

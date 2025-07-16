@@ -117,3 +117,40 @@ def delivery_settings(request):
     form = DeliverySettingsForm(instance=user)
     return render(request, 'delivery/settings.html', {'form': form})
 
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.shortcuts import render
+from orders.models import Order, DeliveryPayment
+
+@login_required
+def delivery_earnings(request):
+    user = request.user
+
+    # ✅ الطلبات التي تم توصيلها ولم يتم دفعها بعد
+    unpaid_orders = Order.objects.filter(
+        assigned_to=user,
+        status='delivered',
+        delivery_payment__isnull=True
+    ).select_related('store')
+
+    # ✅ المدفوعات التي تم استلامها
+    payments = DeliveryPayment.objects.filter(paid_to=user).select_related('order__store')
+
+    # ✅ المجموع المدفوع
+    total_paid = payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    # ✅ المجموع الغير مدفوع (كل طلب = 10 ريال)
+    total_unpaid = unpaid_orders.count() * 10
+
+    # ✅ المتاجر التي لم تدفع بعد
+    unpaid_stores = unpaid_orders.values('store__name').distinct()
+
+    context = {
+        'unpaid_orders': unpaid_orders,
+        'payments': payments,
+        'total_paid': total_paid,
+        'total_unpaid': total_unpaid,
+        'unpaid_stores': unpaid_stores,
+    }
+    return render(request, 'delivery/earnings.html', context)
+
