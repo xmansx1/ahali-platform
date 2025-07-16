@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import admin_delivered_orders
 
 urlpatterns = [
     # لوحة التاجر
@@ -14,7 +15,7 @@ urlpatterns = [
     path('merchant/status_counts/', views.merchant_status_counts, name='merchant_status_counts'),
     path('dashboard/counters/', views.merchant_counters_partial, name='merchant_counters_partial'),
     path('admin/status_counts/', views.admin_order_status_counts, name='admin_order_status_counts'),
-
+    path("admin/orders/delivered/", admin_delivered_orders, name="admin_delivered_orders"),
     # تفاصيل الطلب
     path('order/<int:order_id>/', views.order_detail, name='order_detail'),
     path('<int:order_id>/detail/', views.order_detail_ajax, name='order_detail_ajax'),

@@ -317,3 +317,84 @@ def admin_order_status_counts(request):
         'deleted': Order.objects.filter(status='deleted').count(),
     }
     return JsonResponse(counts)
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from accounts.models import User
+from orders.models import Order
+
+@login_required
+def admin_delivered_orders(request):
+    if request.user.user_type != 'admin':
+        return redirect('home')
+
+    # فلاتر GET
+    merchant_id = request.GET.get("merchant")
+    delivery_user_id = request.GET.get("delivery_user")
+    date_from = request.GET.get("date_from")
+    date_to = request.GET.get("date_to")
+
+    orders = Order.objects.filter(status='delivered')
+
+    if merchant_id:
+        orders = orders.filter(store__user_id=merchant_id)
+
+    if delivery_user_id:
+        orders = orders.filter(assigned_to_id=delivery_user_id)
+
+    if date_from:
+        orders = orders.filter(created_at__date__gte=date_from)
+
+    if date_to:
+        orders = orders.filter(created_at__date__lte=date_to)
+
+    # ✅ جلب التجار والمندوبين الكاملين وليس فقط من الطلبات
+    merchants = User.objects.filter(user_type='merchant', is_active=True)
+    delivery_users = User.objects.filter(user_type='delivery', is_active=True)
+
+    context = {
+        "orders": orders.order_by("-created_at"),
+        "merchants": merchants,
+        "delivery_users": delivery_users,
+        "selected_merchant_id": merchant_id,
+        "selected_delivery_user_id": delivery_user_id,
+        "selected_date_from": date_from,
+        "selected_date_to": date_to,
+        "order_count": orders.count(),
+    }
+
+    return render(request, "admin/delivered_orders.html", context)
+
+from datetime import datetime
+from django.contrib import messages
+from orders.models import Order
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def order_archive(request):
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+
+    orders = Order.objects.filter(status='delivered')
+
+    if from_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+            orders = orders.filter(created_at__date__gte=from_date_obj)
+        except ValueError:
+            messages.error(request, "⚠️ التاريخ (من) غير صالح.")
+
+    if to_date:
+        try:
+            to_date_obj = datetime.strptime(to_date, "%Y-%m-%d").date()
+            orders = orders.filter(created_at__date__lte=to_date_obj)
+        except ValueError:
+            messages.error(request, "⚠️ التاريخ (إلى) غير صالح.")
+
+    context = {
+        "orders": orders.order_by("-created_at"),
+        "from_date": from_date,
+        "to_date": to_date
+    }
+    return render(request, "orders/archive.html", context)

@@ -15,6 +15,7 @@ urlpatterns = [
     # ✅ لوحة المشرف
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/orders/', views.admin_orders, name='admin_orders'),
+    path('admin/orders/archive/', views.order_archive, name='admin_order_archive'),
 
     # ✅ إدارة المستخدمين
     path('admin/users/', views.admin_users, name='admin_users'),
@@ -35,7 +36,8 @@ urlpatterns = [
     path('admin/stores/', views.admin_stores_view, name='admin_stores'),
     path('admin/stores/<int:store_id>/', views.admin_store_detail_view, name='admin_store_detail'),
     path('admin/stores/<int:store_id>/edit/', views.admin_store_edit_view, name='admin_store_edit'),
-    path('admin/stores/<int:store_id>/activate/', views.activate_store, name='activate_store'),
+    path('admin/stores/<int:user_id>/toggle_status/', views.toggle_store_status, name='toggle_store_status'),
+
 
     # ✅ صفحة اختبار مؤقتة
     path('test/', lambda request: HttpResponse("صفحة حسابات الاختبار")),

@@ -14,11 +14,15 @@ class AddUserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = [
-            'username', 'phone_number', 'user_type', 'is_active',
+            'username', 'first_name', 'last_name', 'email',       # ✅ مضافة حديثًا
+            'phone_number', 'user_type', 'is_active',
             'store_location', 'store_latitude', 'store_longitude'
         ]
         widgets = {
             'username': forms.TextInput(attrs={'class': 'input', 'placeholder': 'اسم المستخدم'}),
+            'first_name': forms.TextInput(attrs={'class': 'input', 'placeholder': 'الاسم الأول'}),
+            'last_name': forms.TextInput(attrs={'class': 'input', 'placeholder': 'اسم العائلة'}),
+            'email': forms.EmailInput(attrs={'class': 'input', 'placeholder': 'example@email.com'}),
             'phone_number': forms.TextInput(attrs={'class': 'input', 'placeholder': '05xxxxxxxx'}),
             'user_type': forms.Select(attrs={'class': 'input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'checkbox'}),
@@ -28,6 +32,9 @@ class AddUserForm(forms.ModelForm):
         }
         labels = {
             'username': 'اسم المستخدم',
+            'first_name': 'الاسم الأول',
+            'last_name': 'اسم العائلة',
+            'email': 'البريد الإلكتروني',
             'phone_number': 'رقم الجوال',
             'user_type': 'نوع المستخدم',
             'is_active': 'تفعيل الحساب',

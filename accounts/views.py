@@ -40,50 +40,16 @@ def home_redirect(request):
     else:
         return redirect('admin:index')  # للمشرفين
 
-from stores.models import Store
-from django.views.decorators.http import require_POST
-from ads.models import Advertisement
-
-@login_required
-def admin_dashboard(request):
-    if request.user.user_type != 'admin':
-        return redirect('login')
-
-    # 🟢 إحصائيات عامة
-    total_orders = Order.objects.count()
-    delivering_orders = Order.objects.filter(status='delivering').count()
-    merchants = User.objects.filter(user_type='merchant').count()
-    delivery_users = User.objects.filter(user_type='delivery').count()
-    ads_count = Advertisement.objects.count()  # ✅ تم تصحيحه
-
-    # 🟠 المتاجر غير النشطة
-    inactive_stores = Store.objects.filter(is_active=False)
-
-    return render(request, 'admin/dashboard.html', {
-        'total_orders': total_orders,
-        'delivering_orders': delivering_orders,
-        'merchants': merchants,
-        'delivery_users': delivery_users,
-        'ads_count': ads_count,
-        'inactive_stores': inactive_stores,
-    })
-    
-# ✅ لتفعيل المتجر
-@require_POST
-@login_required
-def activate_store(request, store_id):
-    if request.user.user_type != 'admin':
-        return redirect('home')
-
-    store = get_object_or_404(Store, id=store_id)
-    store.is_active = True
-    store.save()
-    messages.success(request, f"✅ تم تفعيل المتجر: {store.name}")
-    return redirect('admin_dashboard')
-
-
-
 from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import HttpResponse
+import openpyxl
+
+from accounts.models import User
+from orders.models import Order
+
 
 @login_required
 def admin_orders(request):
@@ -91,17 +57,22 @@ def admin_orders(request):
         return redirect('home')
 
     selected_merchant_id = request.GET.get('merchant')
+    selected_delivery_user_id = request.GET.get('delivery_user')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
     export_excel = request.GET.get('export') == 'excel'
 
-    orders = Order.objects.filter(status='delivered').select_related('store')
+    orders = Order.objects.filter(status='delivered').select_related('store', 'assigned_to')
 
     # فلترة بالتاجر
     if selected_merchant_id and selected_merchant_id.isdigit():
         orders = orders.filter(store__user__id=int(selected_merchant_id))
 
-    # فلترة بين تاريخين
+    # فلترة بالمندوب
+    if selected_delivery_user_id and selected_delivery_user_id.isdigit():
+        orders = orders.filter(assigned_to__id=int(selected_delivery_user_id))
+
+    # فلترة بالتاريخ
     if date_from:
         try:
             orders = orders.filter(created_at__date__gte=datetime.strptime(date_from, "%Y-%m-%d").date())
@@ -141,18 +112,104 @@ def admin_orders(request):
         return response
 
     merchants = User.objects.filter(user_type='merchant', is_active=True)
+    delivery_users = User.objects.filter(user_type='delivery', is_active=True)
 
     context = {
         'orders': orders.order_by('-created_at'),
         'merchants': merchants,
+        'delivery_users': delivery_users,
         'selected_merchant_id': selected_merchant_id,
+        'selected_delivery_user_id': selected_delivery_user_id,
         'selected_date_from': date_from,
         'selected_date_to': date_to,
         'order_count': orders.count(),
     }
-    return render(request, 'admin/orders.html', context)
 
     return render(request, 'admin/orders.html', context)
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def admin_dashboard(request):
+    if request.user.user_type != 'admin':
+        return redirect('home')
+
+    from accounts.models import User
+    from orders.models import Order
+    from ads.models import Advertisement  # تأكد أن مسار الاستيراد صحيح حسب مشروعك
+    from stores.models import Store
+
+    # الإحصائيات المطلوبة
+    total_orders = Order.objects.count()
+    delivering_orders = Order.objects.filter(status='delivering').count()
+    merchants = User.objects.filter(user_type='merchant').count()
+    delivery_users = User.objects.filter(user_type='delivery').count()
+    ads_count = Advertisement.objects.count()
+    inactive_stores = Store.objects.filter(is_active=False)
+
+    context = {
+        'total_orders': total_orders,
+        'delivering_orders': delivering_orders,
+        'merchants': merchants,
+        'delivery_users': delivery_users,
+        'ads_count': ads_count,
+        'inactive_stores': inactive_stores,
+    }
+
+    return render(request, 'admin/dashboard.html', context)
+
+from datetime import datetime
+from django.contrib import messages
+from orders.models import Order
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def order_archive(request):
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+
+    orders = Order.objects.filter(status='delivered')
+
+    if from_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+            orders = orders.filter(created_at__date__gte=from_date_obj)
+        except ValueError:
+            messages.error(request, "⚠️ التاريخ (من) غير صالح.")
+
+    if to_date:
+        try:
+            to_date_obj = datetime.strptime(to_date, "%Y-%m-%d").date()
+            orders = orders.filter(created_at__date__lte=to_date_obj)
+        except ValueError:
+            messages.error(request, "⚠️ التاريخ (إلى) غير صالح.")
+
+    context = {
+        "orders": orders.order_by("-created_at"),
+        "from_date": from_date,
+        "to_date": to_date
+    }
+    return render(request, "orders/archive.html", context)
+
+
+from django.shortcuts import get_object_or_404, redirect
+from stores.models import Store
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def activate_store(request, store_id):
+    if request.user.user_type != 'admin':
+        return redirect('home')
+
+    store = get_object_or_404(Store, id=store_id)
+    store.is_active = True
+    store.save()
+    messages.success(request, f"تم تفعيل المتجر: {store.name}")
+    return redirect('admin_stores')
+
 
 @login_required
 def admin_users(request):

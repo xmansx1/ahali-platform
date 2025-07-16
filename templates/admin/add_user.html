@@ -17,12 +17,39 @@
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    <!-- الاسم -->
+    <!-- الاسم الكامل -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block mb-1 text-sm text-gray-700">👤 الاسم الأول</label>
+        {{ form.first_name }}
+        {% if form.first_name.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.first_name.errors.0 }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label class="block mb-1 text-sm text-gray-700">👤 اسم العائلة</label>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.last_name.errors.0 }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- اسم المستخدم -->
     <div>
       <label class="block mb-1 text-sm text-gray-700">👤 اسم المستخدم</label>
       {{ form.username }}
       {% if form.username.errors %}
         <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- البريد الإلكتروني -->
+    <div>
+      <label class="block mb-1 text-sm text-gray-700">📧 البريد الإلكتروني</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
       {% endif %}
     </div>
 
@@ -102,7 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const latInput = document.querySelector('[name="store_latitude"]');
   const lngInput = document.querySelector('[name="store_longitude"]');
 
-  // ✅ إظهار أو إخفاء خانات المتجر
   function toggleMerchantFields() {
     if (userTypeSelect.value === "merchant") {
       merchantFields.style.display = "block";
@@ -117,7 +143,6 @@ document.addEventListener("DOMContentLoaded", function () {
   userTypeSelect.addEventListener("change", toggleMerchantFields);
   toggleMerchantFields();
 
-  // ✅ إعداد Leaflet
   const map = L.map("map").setView([24.7136, 46.6753], 12);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; OpenStreetMap contributors'
