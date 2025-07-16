@@ -2,7 +2,7 @@ from django.urls import path
 from django.http import HttpResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from . import views  # ✅ الاستيراد الصحيح
-
+from accounts.views import admin_edit_delivery_view
 urlpatterns = [
 
     # ✅ تسجيل الدخول والخروج
@@ -24,6 +24,9 @@ urlpatterns = [
     path('admin/users/<int:user_id>/change-password/', views.admin_change_password, name='admin_change_password'),
     path('admin/users/toggle/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
     path('admin/users/<int:user_id>/toggle-store/', views.toggle_store_status, name='toggle_store_status'),  # ✅ هنا تم تصحيحها
+    path('admin/users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
+    path('admin/delivery/<int:user_id>/', views.delivery_detail, name='delivery_detail'),
+    path('admin/delivery/<int:delivery_id>/edit/', admin_edit_delivery_view, name='admin_edit_delivery'),
 
     # ✅ لوحة التاجر
     path('merchant/orders/', views.merchant_orders, name='merchant_orders'),

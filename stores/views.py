@@ -1,22 +1,23 @@
-from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .forms import StoreSettingsForm, PasswordChangeForm
 from stores.models import Store
+from stores.forms import StoreSettingsForm, PasswordChangeForm
+
 
 @login_required
 def store_settings(request):
     user = request.user
 
     if user.user_type != 'merchant':
-        messages.error(request, "غير مصرح لك بالوصول لهذه الصفحة.")
+        messages.error(request, "🚫 غير مصرح لك بالوصول لهذه الصفحة.")
         return redirect('home')
 
     try:
         store = user.store
     except Store.DoesNotExist:
-        messages.error(request, "لم يتم ربط المستخدم بمتجر.")
+        messages.error(request, "❌ لم يتم ربط المستخدم بمتجر.")
         return redirect('home')
 
     form = StoreSettingsForm(instance=store)
@@ -25,10 +26,14 @@ def store_settings(request):
     if request.method == 'POST':
         # ✅ حفظ إعدادات المتجر
         if 'save_settings' in request.POST:
-            print("✅ POST DATA:", request.POST.dict())  # للتحقق من is_available
             form = StoreSettingsForm(request.POST, instance=store)
             if form.is_valid():
-                form.save()
+                store_instance = form.save(commit=False)
+
+                # ✅ نحافظ على حالة التفعيل كما كانت
+                store_instance.is_active = store.is_active
+
+                store_instance.save()
                 messages.success(request, "✅ تم تحديث بيانات المتجر بنجاح.")
                 return redirect('store_settings')
             else:

@@ -80,7 +80,7 @@ class StoreForm(forms.ModelForm):
         fields = [
             'name', 'phone', 'address',
             'latitude', 'longitude', 'store_type',
-            'is_available', 'is_active'  # ✅ تمت الإضافة هنا
+            'is_available'  # ✅ نزيل is_active من هنا لحمايته من الإلغاء التلقائي
         ]
         labels = {
             'name': 'اسم المتجر',
@@ -90,7 +90,6 @@ class StoreForm(forms.ModelForm):
             'longitude': 'خط الطول',
             'store_type': 'نوع المتجر',
             'is_available': 'متاح لاستقبال الطلبات؟',
-            'is_active': 'تفعيل الحساب',  # ✅ تمت الإضافة هنا
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input'}),
@@ -100,5 +99,4 @@ class StoreForm(forms.ModelForm):
             'longitude': forms.NumberInput(attrs={'step': 'any', 'class': 'form-input'}),
             'store_type': forms.Select(attrs={'class': 'form-select'}),
             'is_available': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),  # ✅ تمت الإضافة هنا
         }

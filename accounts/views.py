@@ -370,25 +370,29 @@ from stores.models import Store
 
 def admin_store_detail_view(request, store_id):
     store = get_object_or_404(Store, id=store_id)
-    return render(request, 'admin/user_detail.html', {'store': store})
+    return render(request, 'admin/admin_store_detail.html', {'store': store})
 
 
-from stores.forms import StoreForm  # تأكد أن لديك هذا النموذج
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from stores.models import Store
+from stores.forms import StoreForm  # تأكد أن هذا هو النموذج الصحيح
 
 @login_required
 def admin_store_edit_view(request, store_id):
-    # ✅ التأكد من أن المستخدم يملك صلاحية "مشرف"
     if request.user.user_type != 'admin':
         messages.error(request, "🚫 غير مصرح لك بالوصول إلى هذه الصفحة.")
         return redirect('home')
 
-    # ✅ جلب المتجر أو إظهار 404
     store = get_object_or_404(Store, id=store_id)
 
     if request.method == 'POST':
         form = StoreForm(request.POST, instance=store)
         if form.is_valid():
-            form.save()
+            store_instance = form.save(commit=False)
+            store_instance.is_active = store.is_active  # ✅ نحافظ على حالة التفعيل كما هي
+            store_instance.save()
             messages.success(request, "✅ تم تحديث بيانات المتجر بنجاح.")
             return redirect('admin_store_detail', store_id=store.id)
         else:
@@ -400,6 +404,75 @@ def admin_store_edit_view(request, store_id):
         'form': form,
         'store': store,
     })
+
+from django.contrib.auth import get_user_model
+
+@login_required
+def delete_user(request, user_id):
+    if request.user.user_type != 'admin':
+        messages.error(request, "🚫 لا تملك صلاحية حذف المستخدمين.")
+        return redirect('admin_users')
+
+    user = get_object_or_404(get_user_model(), id=user_id)
+
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, "✅ تم حذف المستخدم بنجاح.")
+        return redirect('admin_users')
+
+    messages.error(request, "❌ لا يمكن تنفيذ الحذف إلا عبر POST.")
+    return redirect('admin_users')
+
+# accounts/views.py
+@login_required
+def delivery_detail(request, user_id):
+    if request.user.user_type != 'admin':
+        messages.error(request, "🚫 غير مصرح لك.")
+        return redirect('admin_users')
+
+    user = get_object_or_404(get_user_model(), id=user_id, user_type='delivery')
+
+    return render(request, 'admin/delivery_detail.html', {
+        'delivery': user
+    })
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from accounts.models import User
+from orders.models import Order  # تأكد من وجود هذا المسار الصحيح حسب مشروعك
+
+@login_required
+def admin_edit_delivery_view(request, delivery_id):
+    if request.user.user_type != 'admin':
+        messages.error(request, "🚫 غير مصرح لك بالوصول إلى هذه الصفحة.")
+        return redirect('home')
+
+    delivery = get_object_or_404(User, id=delivery_id, user_type='delivery')
+    total_delivered_orders = Order.objects.filter(delivery=delivery, status='delivered').count()
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        phone = request.POST.get('phone_number')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        delivery.username = username
+        delivery.phone_number = phone
+        delivery.email = email
+
+        if password:
+            delivery.set_password(password)
+
+        delivery.save()
+        messages.success(request, "✅ تم تحديث بيانات المندوب بنجاح.")
+        return redirect('admin_edit_delivery', delivery_id=delivery.id)
+
+    return render(request, 'admin/delivery_edit.html', {
+        'delivery': delivery,
+        'total_delivered_orders': total_delivered_orders
+    })
+
     
 @login_required
 def toggle_user_status(request, user_id):

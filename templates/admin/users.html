@@ -3,17 +3,21 @@
 
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6 mb-10">
+  <!-- ✅ عنوان الصفحة وزر الإضافة -->
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-2xl font-bold text-gray-800">👥 إدارة المستخدمين</h2>
-    <a href="{% url 'add_user' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+    <a href="{% url 'add_user' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium transition">
       ➕ إضافة مستخدم جديد
     </a>
   </div>
 
+  <!-- ✅ رسائل Django -->
   {% if messages %}
     <div class="mb-4 space-y-2">
       {% for msg in messages %}
-        <div class="bg-green-100 text-green-800 px-4 py-2 rounded text-sm shadow">
+        <div class="px-4 py-2 rounded text-sm shadow
+                    {% if msg.tags == 'success' %}bg-green-100 text-green-800
+                    {% else %}bg-red-100 text-red-700{% endif %}">
           {{ msg }}
         </div>
       {% endfor %}
@@ -54,6 +58,8 @@
           <th class="p-2 border">الحالة</th>
           <th class="p-2 border text-center">الحساب</th>
           <th class="p-2 border text-center">المتجر</th>
+          <th class="p-2 border text-center">👁️ عرض</th>
+          <th class="p-2 border text-center">🗑️ حذف</th>
         </tr>
       </thead>
       <tbody>
@@ -69,7 +75,8 @@
                 <span class="text-red-600 font-semibold">معطل</span>
               {% endif %}
             </td>
-            <!-- زر تفعيل/تعطيل الحساب -->
+
+            <!-- ✅ تفعيل/تعطيل الحساب -->
             <td class="p-2 text-center">
               {% if user.is_active %}
                 <a href="{% url 'toggle_user_status' user.id %}"
@@ -83,7 +90,8 @@
                 </a>
               {% endif %}
             </td>
-            <!-- زر تفعيل/تعطيل المتجر للتاجر فقط -->
+
+            <!-- ✅ تفعيل/تعطيل المتجر للتاجر -->
             <td class="p-2 text-center">
               {% if user.user_type == 'merchant' and user.store %}
                 {% if user.store.is_active %}
@@ -101,10 +109,33 @@
                 <span class="text-gray-400">-</span>
               {% endif %}
             </td>
+
+            <!-- ✅ زر عرض فقط للمناديب -->
+            <td class="p-2 text-center">
+              {% if user.user_type == 'delivery' %}
+                <a href="{% url 'delivery_detail' user.id %}"
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm transition">
+                  👁️ عرض
+                </a>
+              {% else %}
+                <span class="text-gray-400">-</span>
+              {% endif %}
+            </td>
+
+            <!-- ✅ زر حذف -->
+            <td class="p-2 text-center">
+              <form method="POST" action="{% url 'delete_user' user.id %}" onsubmit="return confirm('هل تريد حذف هذا المستخدم؟');">
+                {% csrf_token %}
+                <button type="submit"
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded">
+                  🗑️ حذف
+                </button>
+              </form>
+            </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="6" class="text-center p-4 text-gray-500">لا يوجد مستخدمون مطابقون.</td>
+            <td colspan="8" class="text-center p-4 text-gray-500">لا يوجد مستخدمون مطابقون.</td>
           </tr>
         {% endfor %}
       </tbody>

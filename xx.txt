@@ -3,5 +3,5 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "6"
+git commit -m "صفحة التتاجر لا تعمل "
 git push   

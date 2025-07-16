@@ -1,0 +1,76 @@
+{% extends "core/base.html" %}
+{% block title %}تعديل بيانات المندوب{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow space-y-8">
+
+  <!-- 🔍 عنوان الصفحة -->
+  <div>
+    <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">✏️ تعديل بيانات المندوب</h2>
+  </div>
+
+  <!-- ✅ رسائل Django -->
+  {% if messages %}
+    <div class="space-y-2">
+      {% for message in messages %}
+        <div class="px-4 py-2 text-sm rounded shadow
+            {% if message.tags == 'success' %}bg-green-100 text-green-800
+            {% elif message.tags == 'error' %}bg-red-100 text-red-700
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ✅ تفاصيل المندوب -->
+  <div class="bg-gray-50 rounded-lg p-4 border text-sm text-gray-700 space-y-2">
+    <p><strong>👤 الاسم:</strong> {{ delivery.username }}</p>
+    <p><strong>📞 رقم الجوال:</strong> {{ delivery.phone_number|default:"غير متوفر" }}</p>
+    <p><strong>📧 البريد الإلكتروني:</strong> {{ delivery.email|default:"غير متوفر" }}</p>
+    <p><strong>🧾 عدد الطلبات المسلمة:</strong> {{ total_delivered_orders }}</p>
+    <p><strong>🔖 الحالة:</strong>
+      {% if delivery.is_active %}
+        <span class="text-green-600 font-semibold">مفعل</span>
+      {% else %}
+        <span class="text-red-600 font-semibold">معطل</span>
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- ✏️ نموذج التعديل -->
+  <form method="POST" class="space-y-5">
+    {% csrf_token %}
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">👤 الاسم</label>
+      <input type="text" name="username" value="{{ delivery.username }}"
+             class="w-full border rounded px-3 py-2" required>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">📞 رقم الجوال</label>
+      <input type="text" name="phone_number" value="{{ delivery.phone_number }}"
+             class="w-full border rounded px-3 py-2" required>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">📧 البريد الإلكتروني</label>
+      <input type="email" name="email" value="{{ delivery.email }}"
+             class="w-full border rounded px-3 py-2">
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">🔒 كلمة المرور (اتركها فارغة إن لم ترغب بالتغيير)</label>
+      <input type="password" name="password" class="w-full border rounded px-3 py-2">
+    </div>
+
+    <div class="flex justify-between items-center">
+      <a href="{% url 'admin_users' %}" class="text-blue-600 hover:underline">← العودة</a>
+      <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium">
+        💾 حفظ التعديلات
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
