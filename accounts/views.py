@@ -449,7 +449,8 @@ def admin_edit_delivery_view(request, delivery_id):
         return redirect('home')
 
     delivery = get_object_or_404(User, id=delivery_id, user_type='delivery')
-    total_delivered_orders = Order.objects.filter(delivery=delivery, status='delivered').count()
+    total_delivered_orders = Order.objects.filter(assigned_to=delivery, status='delivered').count()
+
 
     if request.method == 'POST':
         username = request.POST.get('username')

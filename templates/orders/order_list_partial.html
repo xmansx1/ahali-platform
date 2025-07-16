@@ -1,4 +1,10 @@
 {% load order_extras %}
+<!-- ✅ تنبيه نجاح التحديث -->
+<div id="update-success-message"
+     class="hidden mb-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg px-4 py-2 transition-all duration-300">
+  تم التحديث بنجاح ✅
+</div>
+
 <div id="orders-list">
   {% for order in orders %}
     <div class="order-card bg-white border border-gray-200 rounded-xl shadow-md p-5 mb-6 hover:shadow-lg transition-all duration-300 relative"
@@ -10,7 +16,6 @@
 
       <!-- ✅ معلومات الطلب -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 leading-relaxed">
-
         <p>
           <strong>👤 العميل:</strong> {{ order.customer_name }}
           {% if order.customer_phone %}
@@ -47,9 +52,7 @@
             {% elif order.status == 'delivered' %} bg-green-100 text-green-800
             {% elif order.status == 'canceled' %} bg-red-100 text-red-800
             {% elif order.status == 'deleted' %} bg-gray-300 text-gray-800
-            {% endif %}">
-            {{ order.get_status_display }}
-          </span>
+            {% endif %}">{{ order.get_status_display }}</span>
         </p>
 
         {% if order.assigned_to %}
@@ -69,25 +72,33 @@
 
       <!-- ✅ الإجراءات -->
       <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mt-6 border-t pt-4">
-
-        <!-- زر عرض التفاصيل -->
         <button onclick="showOrderDetails({{ order.id }})"
-                class="text-sm text-blue-600 hover:underline transition">
-          عرض التفاصيل →
-        </button>
+                class="text-sm text-blue-600 hover:underline transition">عرض التفاصيل →</button>
 
-        <!-- ✅ نموذج تغيير الحالة -->
         <form method="post" action="{% url 'update_order_status' order.id %}" class="flex flex-wrap gap-3 items-center">
           {% csrf_token %}
 
           <select name="status"
                   class="status-select border border-gray-300 rounded px-3 py-2 text-sm"
                   data-order-id="{{ order.id }}">
-            <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>قيد التجهيز</option>
-            <option value="delivering" {% if order.status == 'delivering' %}selected{% endif %}>قيد التوصيل</option>
-            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>تم التسليم</option>
-            <option value="canceled" {% if order.status == 'canceled' %}selected{% endif %}>ملغي</option>
-            <option value="deleted" {% if order.status == 'deleted' %}selected{% endif %}>محذوف</option>
+            {% if order.status != 'preparing' %}
+              <option value="preparing">قيد التجهيز</option>
+            {% endif %}
+            {% if order.status != 'delivering' %}
+              <option value="delivering">قيد التوصيل</option>
+            {% endif %}
+            {% if order.status != 'delivered' %}
+              <option value="delivered">تم التسليم</option>
+            {% endif %}
+            {% if order.status != 'canceled' %}
+              <option value="canceled">ملغي</option>
+            {% endif %}
+            {% if order.status != 'deleted' %}
+              <option value="deleted">محذوف</option>
+            {% endif %}
+            <!-- ✅ الحالة الحالية تظهر فقط في البداية -->
+            <option value="{{ order.status }}" selected disabled hidden>🟢 الحالة الحالية: {{ order.get_status_display }}</option>
+
           </select>
 
           <input type="number"
@@ -99,9 +110,7 @@
                  {% if order.status == 'delivering' %}required{% endif %}>
 
           <button type="submit"
-                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
-            تحديث
-          </button>
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">تحديث</button>
         </form>
       </div>
     </div>
@@ -110,7 +119,7 @@
   {% endfor %}
 </div>
 
-<!-- ✅ تحديث بيانات الخريطة بعد التحديث -->
+<!-- ✅ كود تحديث بيانات الطلبات + إخفاء التنبيه -->
 <script>
   window.updateOrdersData = function () {
     window.ordersData = {};
@@ -133,4 +142,12 @@
   };
 
   window.updateOrdersData();
+
+  // ✅ إخفاء تنبيه النجاح بعد 5 ثوانٍ
+  const msg = document.getElementById("update-success-message");
+  if (msg && !msg.classList.contains("hidden")) {
+    setTimeout(() => {
+      msg.classList.add("hidden");
+    }, 5000);
+  }
 </script>

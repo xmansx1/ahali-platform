@@ -19,7 +19,6 @@
     <div class="border border-gray-200 rounded-xl shadow-sm p-5 mb-6 bg-gray-50 hover:bg-gray-100 transition-all duration-200">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 leading-relaxed">
 
-        <!-- 👤 بيانات العميل -->
         <div>
           <p><strong>👤 العميل:</strong> {{ order.customer_name }}</p>
           {% if order.customer_phone %}
@@ -30,12 +29,10 @@
         <p><strong>💵 المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
         <p><strong>📝 تفاصيل الطلب:</strong> {{ order.details }}</p>
 
-        <!-- 📍 موقع العميل -->
         <p class="flex items-center gap-1">
           <strong>📍 موقع العميل:</strong>
           {% if order.customer_latitude and order.customer_longitude %}
-            <a href="https://www.google.com/maps?q={{ order.customer_latitude }},{{ order.customer_longitude }}"
-               target="_blank" class="text-blue-600 hover:underline">
+            <a href="https://www.google.com/maps?q={{ order.customer_latitude }},{{ order.customer_longitude }}" target="_blank" class="text-blue-600 hover:underline">
               🔗 انتقل
             </a>
           {% else %}
@@ -43,12 +40,10 @@
           {% endif %}
         </p>
 
-        <!-- 📌 موقع المتجر -->
         <p class="flex items-center gap-1">
           <strong>📌 موقع المتجر:</strong>
           {% if order.store_latitude and order.store_longitude %}
-            <a href="https://www.google.com/maps?q={{ order.store_latitude }},{{ order.store_longitude }}"
-               target="_blank" class="text-blue-600 hover:underline">
+            <a href="https://www.google.com/maps?q={{ order.store_latitude }},{{ order.store_longitude }}" target="_blank" class="text-blue-600 hover:underline">
               🔗 انتقل
             </a>
           {% else %}
@@ -56,7 +51,6 @@
           {% endif %}
         </p>
 
-        <!-- 🏪 اسم المتجر -->
         <p>
           <strong>🏪 المتجر:</strong>
           {{ order.store.name|default:"اسم غير متوفر" }}
@@ -66,53 +60,41 @@
         </p>
       </div>
 
-      <!-- ✅ الإجراءات -->
       <div class="flex flex-wrap gap-3 mt-5">
-
-        <!-- تم التوصيل -->
-        <a href="{% url 'complete_order' order.id %}"
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+        <a href="{% url 'complete_order' order.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
           ✅ تم التوصيل
         </a>
 
-        <!-- اتصال + واتساب برسالة مخصصة -->
         {% if order.customer_phone %}
-          <a href="tel:{{ order.customer_phone }}"
-             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+          <a href="tel:{{ order.customer_phone }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
             📞 اتصال
           </a>
 
-          {% with order.customer_phone as raw_phone %}
+          {% with order.customer_phone|stringformat:"s" as raw_phone %}
             {% if raw_phone|slice:":1" == "0" %}
               {% with "966"|add:raw_phone|slice:"1:" as whatsapp_number %}
-                {% with 'طلبك من متجر ' as pre %}
-                  {% with pre|add:order.store.name|add:' في طريقه إليك 🚚' as message %}
-                    <a href="https://wa.me/{{ whatsapp_number }}?text={{ message|urlencode }}"
-                       target="_blank"
-                       class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
-                      💬 واتساب
-                    </a>
-                  {% endwith %}
-                {% endwith %}
-              {% endwith %}
-            {% else %}
-              {% with 'طلبك من متجر ' as pre %}
-                {% with pre|add:order.store.name|add:' في طريقه إليك 🚚' as message %}
-                  <a href="https://wa.me/{{ raw_phone }}?text={{ message|urlencode }}"
+                {% with "طلبك من متجر "|add:order.store.name|add:" في طريقه إليك 🚚" as message %}
+                  <a href="https://wa.me/{{ whatsapp_number|urlencode }}?text={{ message|urlencode }}"
                      target="_blank"
                      class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
                     💬 واتساب
                   </a>
                 {% endwith %}
               {% endwith %}
+            {% else %}
+              {% with "طلبك من متجر "|add:order.store.name|add:" في طريقه إليك 🚚" as message %}
+                <a href="https://wa.me/{{ raw_phone|urlencode }}?text={{ message|urlencode }}"
+                   target="_blank"
+                   class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                  💬 واتساب
+                </a>
+              {% endwith %}
             {% endif %}
           {% endwith %}
         {% endif %}
 
-        <!-- عرض الخريطة -->
         {% if order.customer_latitude and order.customer_longitude and order.store_latitude and order.store_longitude %}
-          <button onclick="showMap({{ order.id }})"
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition">
+          <button onclick="showMap({{ order.id }})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition">
             🗺️ عرض الخريطة
           </button>
         {% else %}

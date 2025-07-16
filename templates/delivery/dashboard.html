@@ -1,9 +1,10 @@
 {% extends "core/base.html" %}
 {% block title %}الطلبات المتاحة للتوصيل{% endblock %}
-
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 py-8">
-  <h2 class="text-3xl font-extrabold mb-8 flex items-center gap-3 text-gray-800">📦 الطلبات المتاحة للتوصيل</h2>
+  <h2 class="text-3xl font-extrabold mb-8 flex items-center gap-3 text-gray-800">
+    📦 الطلبات المتاحة للتوصيل
+  </h2>
 
   {% if messages %}
     <div class="mb-6 space-y-2">
@@ -20,8 +21,8 @@
       {% for order in orders %}
         <div class="bg-white border border-gray-200 rounded-xl shadow hover:shadow-lg transition-all duration-300 p-6 relative">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 leading-relaxed">
-
-            <p><strong>👤 العميل:</strong> {{ order.customer_name }}<br>
+            <p>
+              <strong>👤 العميل:</strong> {{ order.customer_name }}<br>
               {% if order.customer_phone %}
                 <span class="text-gray-500 text-xs">📱 {{ order.customer_phone }}</span>
               {% endif %}
@@ -66,7 +67,7 @@
             </form>
 
             {% if order.latitude and order.longitude and order.store.latitude and order.store.longitude %}
-              <button onclick="showMap({{ order.id }})"
+              <button type="button" onclick="showMap({{ order.id }})"
                       class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm transition flex items-center gap-2">
                 🗺️ اعرف الموقع
               </button>
@@ -133,7 +134,6 @@
     document.getElementById("map-modal").classList.add("hidden");
   }
 
-  // ✅ بيانات الطلبات للخريطة
   window.ordersData = {
     {% for order in orders %}
       {% if order.latitude and order.longitude %}
@@ -147,9 +147,53 @@
     {% endfor %}
   };
 
-  // ✅ تحديث الصفحة تلقائيًا كل 10 ثوانٍ
+  // ✅ تحديث الصفحة تلقائيًا كل 20 ثانية (وليس عند فتح الخريطة)
+  let reloadEnabled = true;
   setInterval(() => {
-    window.location.reload();
-  }, 10000);
+    if (reloadEnabled) window.location.reload();
+  }, 20000);
+
+  // عند فتح الخريطة أوقف التحديث التلقائي
+  function showMap(orderId) {
+    reloadEnabled = false; // ⛔ أوقف التحديث
+    const order = window.ordersData[orderId];
+    if (!order) return alert("لا توجد بيانات للطلب");
+
+    document.getElementById("map-modal").classList.remove("hidden");
+
+    if (window.mapInstance) window.mapInstance.remove();
+
+    const map = L.map("map-container").setView([order.customer_latitude, order.customer_longitude], 13);
+    window.mapInstance = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const clientIcon = L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/535/535239.png",
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    });
+
+    const storeIcon = L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    });
+
+    L.marker([order.customer_latitude, order.customer_longitude], { icon: clientIcon })
+      .addTo(map).bindPopup("📍 موقع العميل").openPopup();
+
+    if (order.store_latitude && order.store_longitude) {
+      L.marker([order.store_latitude, order.store_longitude], { icon: storeIcon })
+        .addTo(map).bindPopup("🏪 موقع المتجر");
+    }
+  }
+
+  function closeMapModal() {
+    document.getElementById("map-modal").classList.add("hidden");
+    reloadEnabled = true; // ✅ أعِد التحديث بعد إغلاق الخريطة
+  }
 </script>
 {% endblock %}

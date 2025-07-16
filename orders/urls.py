@@ -9,7 +9,7 @@ urlpatterns = [
     # طلبات التاجر
     path('order/<int:order_id>/update/', views.update_order_status, name='update_order_status'),
     path('merchant/orders/partial/', views.merchant_orders_partial, name='merchant_orders_partial'),
-
+    
     # العدادات
     path('merchant/status_counts/', views.merchant_status_counts, name='merchant_status_counts'),
     path('dashboard/counters/', views.merchant_counters_partial, name='merchant_counters_partial'),

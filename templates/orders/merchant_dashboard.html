@@ -1,185 +1,176 @@
 {% extends "core/base.html" %}
 {% load static %}
-
+{% load order_extras %}
 {% block content %}
 <div class="p-6 max-w-5xl mx-auto relative">
-    <!-- ✅ العنوان والزر -->
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">لوحة تحكم التاجر</h2>
-        <a href="{% url 'merchant_archive' %}" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm text-gray-700 shadow-sm">
-            🗂️ أرشيف الطلبات
-        </a>
-    </div>
+  <!-- العنوان والزر -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">لوحة تحكم التاجر</h2>
+    <a href="{% url 'merchant_archive' %}" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-sm text-gray-700 shadow-sm">
+      🗂️ أرشيف الطلبات
+    </a>
+  </div>
 
-    <!-- ✅ العدادات -->
-    <div id="order-counters" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8 text-center">
-        <div class="bg-yellow-100 p-4 rounded-lg shadow-sm">قيد التجهيز<br><strong class="text-xl text-yellow-700">{{ status_counts.preparing }}</strong></div>
-        <div class="bg-blue-100 p-4 rounded-lg shadow-sm">قيد التوصيل<br><strong class="text-xl text-blue-700">{{ status_counts.delivering }}</strong></div>
-        <div class="bg-green-100 p-4 rounded-lg shadow-sm">تم التسليم<br><strong class="text-xl text-green-700">{{ status_counts.delivered }}</strong></div>
-        <div class="bg-red-100 p-4 rounded-lg shadow-sm">ملغي<br><strong class="text-xl text-red-700">{{ status_counts.canceled }}</strong></div>
-        <div class="bg-gray-200 p-4 rounded-lg shadow-sm">محذوف<br><strong class="text-xl text-gray-700">{{ status_counts.deleted }}</strong></div>
-    </div>
+  <!-- العدادات -->
+  <div id="order-counters" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8 text-center">
+    <div class="bg-yellow-100 p-4 rounded-lg shadow-sm">قيد التجهيز<br><strong class="text-xl text-yellow-700">{{ status_counts.preparing }}</strong></div>
+    <div class="bg-blue-100 p-4 rounded-lg shadow-sm">قيد التوصيل<br><strong class="text-xl text-blue-700">{{ status_counts.delivering }}</strong></div>
+    <div class="bg-green-100 p-4 rounded-lg shadow-sm">تم التسليم<br><strong class="text-xl text-green-700">{{ status_counts.delivered }}</strong></div>
+    <div class="bg-red-100 p-4 rounded-lg shadow-sm">ملغي<br><strong class="text-xl text-red-700">{{ status_counts.canceled }}</strong></div>
+    <div class="bg-gray-200 p-4 rounded-lg shadow-sm">محذوف<br><strong class="text-xl text-gray-700">{{ status_counts.deleted }}</strong></div>
+  </div>
 
-    <!-- ✅ رسائل التنبيه -->
-    {% if messages %}
-        <div class="mb-4 space-y-2">
-            {% for message in messages %}
-                <div class="bg-red-100 text-red-800 px-4 py-2 rounded shadow text-sm">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <!-- ✅ الطلبات -->
-    <div id="orders-container">
-        {% include 'orders/order_list_partial.html' %}
+  <!-- رسائل التنبيه -->
+  {% if messages %}
+    <div class="mb-4 space-y-2">
+      {% for message in messages %}
+        <div class="bg-red-100 text-red-800 px-4 py-2 rounded shadow text-sm">{{ message }}</div>
+      {% endfor %}
     </div>
+  {% endif %}
 
-    <!-- ✅ نافذة التفاصيل (Modal) -->
-    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg relative">
-            <button onclick="closeModal()" class="absolute top-2 left-2 text-gray-600 hover:text-black text-xl">✕</button>
-            <div id="order-modal-content" class="text-sm text-gray-800">
-                <p>جارٍ تحميل التفاصيل...</p>
-            </div>
-        </div>
+  <!-- الطلبات -->
+  <div id="orders-container">
+    {% include 'orders/order_list_partial.html' %}
+  </div>
+
+  <!-- نافذة التفاصيل -->
+  <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="handleModalBackgroundClick(event)">
+    <div class="bg-white w-full max-w-xl p-6 rounded-lg shadow-lg relative" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-2 left-2 text-gray-600 hover:text-black text-xl">✕</button>
+      <div id="order-modal-content" class="text-sm text-gray-800">
+        <p>جارٍ تحميل التفاصيل...</p>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- ✅ سكربتات -->
 <script>
-    let lastOrderCount = null;
-    let isModalOpen = false;
-    let autoRefresh = true;
-    const alertSound = new Audio("{% static 'sounds/notify.mp3' %}");
+  let lastOrderCount = null;
+  let isModalOpen = false;
+  let autoRefresh = true;
+  const alertSound = new Audio("{% static 'sounds/notify.mp3' %}");
 
-    function pauseAutoRefresh() {
-        autoRefresh = false;
-    }
+  function pauseAutoRefresh() { autoRefresh = false; }
+  function resumeAutoRefresh() { autoRefresh = true; }
 
-    function resumeAutoRefresh() {
-        autoRefresh = true;
-    }
-
-    function setupStatusListeners() {
-        document.querySelectorAll('.status-select').forEach(select => {
-            select.addEventListener('change', function () {
-                const orderId = this.dataset.orderId;
-                const invoiceInput = document.getElementById('invoice-' + orderId);
-                if (this.value === 'delivering') {
-                    invoiceInput.classList.remove('hidden');
-                    invoiceInput.required = true;
-                } else {
-                    invoiceInput.classList.add('hidden');
-                    invoiceInput.required = false;
-                }
-            });
-        });
-
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function (e) {
-                pauseAutoRefresh();
-                const select = form.querySelector('.status-select');
-                const status = select.value;
-                const invoiceInput = form.querySelector('.invoice-input');
-
-                if (status === 'delivering') {
-                    if (!invoiceInput.value || parseFloat(invoiceInput.value) <= 0) {
-                        e.preventDefault();
-                        alert("يرجى إدخال مبلغ الفاتورة قبل المتابعة.");
-                        resumeAutoRefresh();
-                        return;
-                    }
-                }
-
-                if (['canceled', 'deleted'].includes(status)) {
-                    if (!confirm('هل أنت متأكد من تنفيذ هذا الإجراء؟')) {
-                        e.preventDefault();
-                        resumeAutoRefresh();
-                        return;
-                    }
-                }
-
-                setTimeout(() => {
-                    resumeAutoRefresh();
-                }, 2000);
-            });
-        });
-    }
-
-    function showOrderDetails(orderId) {
-        isModalOpen = true;
-        pauseAutoRefresh();
-        const modal = document.getElementById('order-modal');
-        const content = document.getElementById('order-modal-content');
-
-        modal.classList.remove('hidden');
-        content.innerHTML = '<p>جارٍ تحميل التفاصيل...</p>';
-
-        fetch(`/orders/${orderId}/detail/`)
-            .then(response => response.text())
-            .then(html => {
-                content.innerHTML = html;
-            })
-            .catch(() => {
-                content.innerHTML = '<p class="text-red-500">حدث خطأ أثناء تحميل التفاصيل.</p>';
-            });
-    }
-
-    function closeModal() {
-        document.getElementById('order-modal').classList.add('hidden');
-        isModalOpen = false;
-        resumeAutoRefresh();
-    }
-
-    function refreshOrders() {
-        if (!autoRefresh || isModalOpen) return;
-
-        fetch("{% url 'merchant_orders_partial' %}")
-            .then(response => response.text())
-            .then(html => {
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = html;
-                const newOrders = tempDiv.querySelectorAll('.order-card');
-
-                if (lastOrderCount !== null && newOrders.length > lastOrderCount) {
-                    alertSound.play();
-                    newOrders[0].classList.add("ring", "ring-green-400", "animate-pulse");
-                    setTimeout(() => {
-                        newOrders[0].classList.remove("ring", "ring-green-400", "animate-pulse");
-                    }, 4000);
-                }
-
-                lastOrderCount = newOrders.length;
-                document.getElementById("orders-container").innerHTML = html;
-                setupStatusListeners();
-            });
-    }
-
-    function refreshStatusCounts() {
-        fetch("{% url 'merchant_status_counts' %}")
-            .then(response => response.json())
-            .then(counts => {
-                document.querySelector('#order-counters').innerHTML = `
-                    <div class="bg-yellow-100 p-4 rounded-lg shadow-sm">قيد التجهيز<br><strong class="text-xl text-yellow-700">${counts.preparing}</strong></div>
-                    <div class="bg-blue-100 p-4 rounded-lg shadow-sm">قيد التوصيل<br><strong class="text-xl text-blue-700">${counts.delivering}</strong></div>
-                    <div class="bg-green-100 p-4 rounded-lg shadow-sm">تم التسليم<br><strong class="text-xl text-green-700">${counts.delivered}</strong></div>
-                    <div class="bg-red-100 p-4 rounded-lg shadow-sm">ملغي<br><strong class="text-xl text-red-700">${counts.canceled}</strong></div>
-                    <div class="bg-gray-200 p-4 rounded-lg shadow-sm">محذوف<br><strong class="text-xl text-gray-700">${counts.deleted}</strong></div>
-                `;
-            });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        setupStatusListeners();
-        refreshOrders();
-        refreshStatusCounts();
-        setInterval(() => {
-            refreshOrders();
-            refreshStatusCounts();
-        }, 30000); // كل 30 ثانية
+  function setupStatusListeners() {
+    document.querySelectorAll(".status-select").forEach((select) => {
+      select.addEventListener("change", function () {
+        const orderId = this.dataset.orderId;
+        const invoiceInput = document.getElementById("invoice-" + orderId);
+        if (this.value === "delivering") {
+          invoiceInput.classList.remove("hidden");
+          invoiceInput.required = true;
+        } else {
+          invoiceInput.classList.add("hidden");
+          invoiceInput.required = false;
+        }
+      });
     });
-</script>
 
+    document.querySelectorAll("form").forEach((form) => {
+      form.addEventListener("submit", function (e) {
+        pauseAutoRefresh();
+        const select = form.querySelector(".status-select");
+        const status = select.value;
+        const invoiceInput = form.querySelector(".invoice-input");
+
+        if (status === "delivering") {
+          if (!invoiceInput.value || parseFloat(invoiceInput.value) <= 0) {
+            e.preventDefault();
+            alert("يرجى إدخال مبلغ الفاتورة قبل المتابعة.");
+            resumeAutoRefresh();
+            return;
+          }
+        }
+
+        if (["canceled", "deleted"].includes(status)) {
+          if (!confirm("هل أنت متأكد من تنفيذ هذا الإجراء؟")) {
+            e.preventDefault();
+            resumeAutoRefresh();
+            return;
+          }
+        }
+
+        setTimeout(() => { resumeAutoRefresh(); }, 2000);
+      });
+    });
+  }
+
+  function showOrderDetails(orderId) {
+    isModalOpen = true;
+    pauseAutoRefresh();
+    const modal = document.getElementById("order-modal");
+    const content = document.getElementById("order-modal-content");
+
+    modal.classList.remove("hidden");
+    content.innerHTML = "<p>جارٍ تحميل التفاصيل...</p>";
+
+    fetch(`/orders/${orderId}/detail/`)
+      .then((response) => response.text())
+      .then((html) => { content.innerHTML = html; })
+      .catch(() => {
+        content.innerHTML = '<p class="text-red-500">حدث خطأ أثناء تحميل التفاصيل.</p>';
+      });
+  }
+
+  function closeModal() {
+    document.getElementById("order-modal").classList.add("hidden");
+    isModalOpen = false;
+    resumeAutoRefresh();
+  }
+
+  function handleModalBackgroundClick(event) {
+    closeModal();
+  }
+
+  function refreshOrders() {
+    if (!autoRefresh || isModalOpen) return;
+
+    fetch("{% url 'merchant_orders_partial' %}")
+      .then((response) => response.text())
+      .then((html) => {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html;
+        const newOrders = tempDiv.querySelectorAll(".order-card");
+
+        if (lastOrderCount !== null && newOrders.length > lastOrderCount) {
+          alertSound.play();
+          newOrders[0].classList.add("ring", "ring-green-400", "animate-pulse");
+          setTimeout(() => {
+            newOrders[0].classList.remove("ring", "ring-green-400", "animate-pulse");
+          }, 4000);
+        }
+
+        lastOrderCount = newOrders.length;
+        document.getElementById("orders-container").innerHTML = html;
+        setupStatusListeners();
+      });
+  }
+
+  function refreshStatusCounts() {
+    fetch("{% url 'merchant_status_counts' %}")
+      .then((response) => response.json())
+      .then((counts) => {
+        document.querySelector("#order-counters").innerHTML = `
+          <div class="bg-yellow-100 p-4 rounded-lg shadow-sm">قيد التجهيز<br><strong class="text-xl text-yellow-700">${counts.preparing}</strong></div>
+          <div class="bg-blue-100 p-4 rounded-lg shadow-sm">قيد التوصيل<br><strong class="text-xl text-blue-700">${counts.delivering}</strong></div>
+          <div class="bg-green-100 p-4 rounded-lg shadow-sm">تم التسليم<br><strong class="text-xl text-green-700">${counts.delivered}</strong></div>
+          <div class="bg-red-100 p-4 rounded-lg shadow-sm">ملغي<br><strong class="text-xl text-red-700">${counts.canceled}</strong></div>
+          <div class="bg-gray-200 p-4 rounded-lg shadow-sm">محذوف<br><strong class="text-xl text-gray-700">${counts.deleted}</strong></div>
+        `;
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setupStatusListeners();
+    refreshOrders();
+    refreshStatusCounts();
+    setInterval(() => {
+      refreshOrders();
+      refreshStatusCounts();
+    }, 30000);
+  });
+</script>
 {% endblock %}
