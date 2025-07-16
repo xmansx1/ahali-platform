@@ -28,22 +28,36 @@
     </a>
   </div>
 
-  <!-- ✅ نموذج البحث -->
-  <form method="get" class="mb-6 flex flex-wrap items-end gap-4">
+  <!-- ✅ نموذج البحث والفلترة -->
+  <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
     <div>
-      <label class="block text-sm mb-1 text-gray-600">🔍 البحث عن متجر</label>
-      <input type="text" name="q" value="{{ request.GET.q }}" class="px-4 py-2 border rounded w-64" placeholder="اسم المتجر أو الموقع...">
+      <label class="block text-sm text-gray-600 mb-1">🔍 البحث عن متجر</label>
+      <input type="text" name="q" value="{{ request.GET.q }}"
+             class="px-4 py-2 border rounded-lg w-64 focus:ring focus:border-blue-500"
+             placeholder="اسم المتجر أو الموقع...">
     </div>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-      بحث
-    </button>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">🏷️ نوع المتجر</label>
+      <select name="type" class="px-4 py-2 border rounded-lg w-48 focus:ring focus:border-blue-500">
+        <option value="">الكل</option>
+        {% for value, label in store_types %}
+          <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block invisible text-sm mb-1">بحث</label>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">
+        🔍 بحث
+      </button>
+    </div>
   </form>
 
   <!-- ✅ عرض المتاجر -->
   {% if stores %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for store in stores %}
-        <div class="border rounded-lg p-4 shadow hover:shadow-lg transition relative">
+        <div class="border rounded-lg p-4 shadow hover:shadow-md transition">
           <h3 class="text-lg font-semibold text-blue-700 mb-1">🏪 {{ store.name|default:"اسم المتجر غير متوفر" }}</h3>
           <p class="text-sm text-gray-600 mb-2">{{ store.address|default:"بدون عنوان" }}</p>
 
@@ -57,15 +71,15 @@
           {% endif %}
 
           <button onclick="openOrderForm({{ store.id }})"
-                  class="mt-2 bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700 w-full">
+                  class="mt-2 bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700 w-full transition">
             🛒 اطلب الآن
           </button>
 
           <!-- ✅ نموذج الطلب -->
           <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-lg relative">
+            <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg relative">
               <button onclick="closeOrderForm({{ store.id }})"
-                      class="absolute top-2 left-2 text-red-500 text-xl">×</button>
+                      class="absolute top-2 left-2 text-red-500 text-xl font-bold">×</button>
 
               <form method="post" action="{% url 'submit_store_order' store.id %}" class="space-y-4">
                 {% csrf_token %}
@@ -86,7 +100,7 @@
                 <div id="map-{{ store.id }}" class="h-48 w-full border rounded"></div>
 
                 <button type="button" onclick="reLocate({{ store.id }})"
-                        class="bg-gray-200 hover:bg-gray-300 text-sm px-3 py-1 rounded mt-2">
+                        class="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-1 rounded mt-2">
                   📍 تحديد موقعي تلقائيًا
                 </button>
 

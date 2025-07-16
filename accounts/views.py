@@ -199,6 +199,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from accounts.models import User
 
+from orders.models import Order  # تأكد من إضافة هذا الاستيراد في الأعلى
+
 @login_required
 def admin_user_detail(request, user_id):
     # ✅ التأكد أن المستخدم الحالي يملك صلاحية المشرف
@@ -212,10 +214,19 @@ def admin_user_detail(request, user_id):
     # ✅ محاولة الحصول على المتجر المرتبط بالمستخدم، إن وجد
     store = getattr(target_user, 'store', None)
 
+    # ✅ احتساب عدد الطلبات المسلمة إذا كان المستخدم مندوب
+    delivered_orders_count = 0
+    if target_user.user_type == 'delivery':
+        delivered_orders_count = Order.objects.filter(
+            assigned_to=target_user,
+            status='delivered'
+        ).count()
+
     # ✅ تجهيز البيانات لإرسالها إلى القالب
     context = {
         'target_user': target_user,
         'store': store,
+        'delivered_orders_count': delivered_orders_count,  # ✅ تمرير العدد للقالب
     }
 
     return render(request, 'admin/user_detail.html', context)
@@ -424,6 +435,8 @@ def delete_user(request, user_id):
     return redirect('admin_users')
 
 # accounts/views.py
+from orders.models import Order  # تأكد من وجود هذا الاستيراد
+
 @login_required
 def delivery_detail(request, user_id):
     if request.user.user_type != 'admin':
@@ -432,8 +445,15 @@ def delivery_detail(request, user_id):
 
     user = get_object_or_404(get_user_model(), id=user_id, user_type='delivery')
 
+    # ✅ حساب عدد الطلبات المسلمة للمندوب
+    delivered_orders_count = Order.objects.filter(
+        assigned_to=user,
+        status='delivered'
+    ).count()
+
     return render(request, 'admin/delivery_detail.html', {
-        'delivery': user
+        'delivery': user,
+        'delivered_orders_count': delivered_orders_count,  # ✅ تمرير العدد للقالب
     })
 
 from django.contrib.auth.decorators import login_required

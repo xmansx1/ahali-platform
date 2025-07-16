@@ -19,7 +19,8 @@
     <p><strong>📞 رقم الجوال:</strong> {{ delivery.phone_number|default:"غير محدد" }}</p>
     <p><strong>📧 البريد الإلكتروني:</strong> {{ delivery.email|default:"غير متوفر" }}</p>
     <p><strong>🆔 نوع المستخدم:</strong> {{ delivery.get_user_type_display }}</p>
-    <p><strong>📦 عدد الطلبات المسلمة:</strong> {{ delivery.delivered_orders_count }}</p>
+    <p><strong>📦 عدد الطلبات المسلمة:</strong> {{ delivered_orders_count }}</p>
+
     <p>
       <strong>⚙️ الحالة:</strong>
       {% if delivery.is_active %}
