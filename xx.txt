@@ -3,10 +3,26 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "الرفع3ريندر"
+git commit -m "الرفع4ريندر"
 git push origin main
 
 
 git add .
 git commit -m "🚀 إصلاح: إضافة psycopg لدعم PostgreSQL"
 git push origin main
+
+
+python manage.py makemigrations
+python manage.py migrate
+
+البيئة المحلية 
+copy .env.development .env
+
+python manage.py migrate
+
+python manage.py collectstatic --noinput
+
+
+copy .env.development .env
+
+python manage.py runserver
