@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('control-panel-9x8z/', admin.site.urls),  # ✅ مسار مخصص وآمن
 
     # روابط التطبيقات
     path('accounts/', include('accounts.urls')),

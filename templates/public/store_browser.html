@@ -62,7 +62,7 @@
           <p class="text-sm text-gray-600 mb-2">{{ store.address|default:"بدون عنوان" }}</p>
 
           {% if store.latitude and store.longitude %}
-            <a href="https://www.google.com/maps?q={{ store.latitude }},{{ store.longitude }}" 
+              <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:"6" }},{{ store.longitude|floatformat:"6" }}" 
                target="_blank" class="text-blue-500 text-sm hover:underline block mb-2">
               📍 عرض على الخريطة
             </a>
