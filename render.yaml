@@ -25,9 +25,8 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings
 
-      - key: ALLOWED_HOSTS
+      - key: PROD_ALLOWED_HOSTS
         value: ahali-platform.onrender.com,render.com,.onrender.com
-
 
       - key: CLOUDINARY_CLOUD_NAME
         value: dvptglfs2

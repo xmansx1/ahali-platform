@@ -18,10 +18,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-default-key")
 # ✅ وضع DEBUG
 DEBUG = ENVIRONMENT == "development"
 
-# ✅ ALLOWED_HOSTS حسب البيئة
+# ✅ السماح بالمضيفين حسب البيئة
+if ENVIRONMENT == "production":
+    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
-
+else:
+    ALLOWED_HOSTS = os.getenv("DEV_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 # ✅ التطبيقات المثبتة
 INSTALLED_APPS = [
@@ -59,7 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# ✅ إعدادات urls/wsgi
+# ✅ إعدادات URLs و WSGI
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
@@ -97,7 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ✅ اللغة والوقت
+# ✅ اللغة والمنطقة الزمنية
 LANGUAGE_CODE = 'ar'
 TIME_ZONE = 'Asia/Riyadh'
 USE_I18N = True
@@ -111,17 +113,17 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = '/'
 
-# ✅ static files
+# ✅ إعدادات static files
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ✅ media files حسب البيئة
+# ✅ إعدادات media files حسب البيئة
 if ENVIRONMENT == "production":
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'  # required by Django admin
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # fallback (not used w/ cloudinary)
+    MEDIA_URL = '/media/'  # مطلوب لـ admin
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # احتياطي (لن يُستخدم فعليًا)
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -131,9 +133,9 @@ CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-# ✅ إعدادات إضافية
+# ✅ الإعدادات الافتراضية للنماذج
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ✅ دعم HTTPS في بيئة الإنتاج
+# ✅ دعم HTTPS في الإنتاج (Render)
 if ENVIRONMENT == "production":
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

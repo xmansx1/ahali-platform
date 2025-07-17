@@ -3,7 +3,7 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "الرفع10ريندر"
+git commit -m "الرفع11ريندر"
 git push origin main
 
 
