@@ -19,10 +19,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-default-key")
 DEBUG = ENVIRONMENT == "development"
 
 # ✅ ALLOWED_HOSTS حسب البيئة
-if ENVIRONMENT == "production":
-    ALLOWED_HOSTS = os.getenv("PROD_ALLOWED_HOSTS", "render.com,.onrender.com").split(",")
-else:
-    ALLOWED_HOSTS = os.getenv("DEV_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+
 
 # ✅ التطبيقات المثبتة
 INSTALLED_APPS = [
