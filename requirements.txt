@@ -1,3 +1,4 @@
+psycopg[binary]
 asgiref==3.9.1
 certifi==2025.7.14
 charset-normalizer==3.4.2
