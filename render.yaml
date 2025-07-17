@@ -4,8 +4,8 @@ services:
     env: python
     repo: https://github.com/xmansx1/ahali-platform
     branch: main
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn config.wsgi:application"
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn config.wsgi:application
     envVars:
       - key: SECRET_KEY
         value: u)vypmxs+0+93ckk!z$@-qu9fv%#x9*3!a(dq)lp8*09$z@y8l
@@ -23,7 +23,6 @@ services:
         value: config.settings
       - key: PYTHON_VERSION
         value: 3.12
-
       - key: DATABASE_URL
         fromDatabase:
           name: ahli-db
