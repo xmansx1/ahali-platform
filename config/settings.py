@@ -91,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ✅ اللغة والمنطقة الزمنية
-LANGUAGE_CODE = 'ar'
+LANGUAGE_CODE = 'en'
 TIME_ZONE = 'Asia/Riyadh'
 USE_I18N = True
 USE_TZ = True
