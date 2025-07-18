@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 
-# تحميل متغيرات البيئة
+# ✅ تحميل متغيرات البيئة
 load_dotenv()
 
 # 📍 نوع البيئة: development أو production
@@ -18,12 +18,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-default-key")
 # ✅ وضع DEBUG
 DEBUG = ENVIRONMENT == "development"
 
-# ✅ السماح بالمضيفين حسب البيئة
-if ENVIRONMENT == "production":
-    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
-
-else:
-    ALLOWED_HOSTS = os.getenv("DEV_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+# ✅ السماح بالمضيفين (موحد لجميع البيئات)
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 # ✅ التطبيقات المثبتة
 INSTALLED_APPS = [
@@ -81,15 +77,10 @@ TEMPLATES = [
     },
 ]
 
-# ✅ إعدادات قاعدة البيانات حسب البيئة
-if ENVIRONMENT == "production":
-    DATABASES = {
-        'default': dj_database_url.config(default=os.getenv("PROD_DATABASE_URL"))
-    }
-else:
-    DATABASES = {
-        'default': dj_database_url.config(default=os.getenv("DEV_DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"))
-    }
+# ✅ إعدادات قاعدة البيانات
+DATABASES = {
+    'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
+}
 
 # ✅ إعدادات كلمات المرور
 AUTH_PASSWORD_VALIDATORS = [
@@ -123,7 +114,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 if ENVIRONMENT == "production":
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = '/media/'  # مطلوب لـ admin
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # احتياطي (لن يُستخدم فعليًا)
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # احتياطي فقط
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -136,6 +127,6 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 # ✅ الإعدادات الافتراضية للنماذج
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ✅ دعم HTTPS في الإنتاج (Render)
+# ✅ دعم HTTPS في الإنتاج (مثل Render)
 if ENVIRONMENT == "production":
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
