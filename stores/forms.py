@@ -1,12 +1,15 @@
 from django import forms
 from stores.models import Store
+from django import forms
+from stores.models import Store
 
 class StoreSettingsForm(forms.ModelForm):
     class Meta:
         model = Store
         fields = [
             'phone', 'address', 'latitude', 'longitude',
-            'is_available', 'delivery_fee', 'customer_delivery_share'
+            'is_available', 'delivery_fee', 'customer_delivery_share',
+            'delivery_policy_note'  # ✅ الحقل الجديد
         ]
         labels = {
             'phone': '📞 رقم الجوال',
@@ -16,6 +19,7 @@ class StoreSettingsForm(forms.ModelForm):
             'is_available': '📦 المتجر متاح لاستقبال الطلبات',
             'delivery_fee': '🚚 مبلغ التوصيل (ريال)',
             'customer_delivery_share': '🧮 النسبة التي يتحملها العميل من التوصيل (%)',
+            'delivery_policy_note': '📢 سياسة التوصيل (اختياري)',
         }
         widgets = {
             'phone': forms.TextInput(attrs={
@@ -45,13 +49,17 @@ class StoreSettingsForm(forms.ModelForm):
                 'min': '0',
                 'max': '100'
             }),
+            'delivery_policy_note': forms.Textarea(attrs={
+                'class': 'w-full border rounded px-3 py-2',
+                'placeholder': 'مثال: 🚚 التوصيل مجاني للطلبات فوق 50 ريال',
+                'rows': 3
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.data:
             self.data = self.data.copy()
-            # ✅ تحويل checkbox إلى Boolean
             self.data['is_available'] = self.data.get('is_available') == 'on'
 
     def clean_delivery_fee(self):

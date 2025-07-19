@@ -53,6 +53,13 @@ class Store(models.Model):
         help_text="قيمة من 0 إلى 100. تحدد كم يتحمل العميل من رسوم التوصيل."
     )
 
+    # ✅ ملاحظة سياسة التوصيل (جديدة)
+    delivery_policy_note = models.TextField(
+        verbose_name="ملاحظة سياسة التوصيل",
+        blank=True,
+        help_text="مثال: الطلبات التي تقل عن 50 ريال تُحسب رسوم التوصيل 12 ريال."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإضافة")
 
     def __str__(self):

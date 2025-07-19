@@ -1,5 +1,7 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load order_extras %}
+
 {% block title %}طلباتي الحالية{% endblock %}
 
 {% block content %}
@@ -32,7 +34,7 @@
         <p>
           <strong>📍 موقع العميل:</strong>
           {% if order.customer_latitude and order.customer_longitude %}
-            <a href="#" onclick="openMapModal({{ order.store_latitude }}, {{ order.store_longitude }}, {{ order.customer_latitude }}, {{ order.customer_longitude }})" class="text-blue-600 hover:underline">🔗 عرض الخريطة</a>
+            <a href="https://www.google.com/maps?q={{ order.customer_latitude }},{{ order.customer_longitude }}" target="_blank" class="text-blue-600 hover:underline">🔗 انتقل</a>
           {% else %}
             <span class="text-gray-500">غير متوفر</span>
           {% endif %}
@@ -55,6 +57,7 @@
         </p>
       </div>
 
+      <!-- ✅ الأزرار -->
       <div class="flex flex-wrap gap-3 mt-5">
         <a href="{% url 'complete_order' order.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
           ✅ تم التوصيل
@@ -65,19 +68,26 @@
             📞 اتصال
           </a>
 
-          {% with order.customer_phone|stringformat:"s"|cut:" "|cut:"-"|cut:"+" as raw_phone %}
-            {% with "طلبك من متجر "|add:order.store.name|add:" في طريقه إليك 🚚" as message %}
-              {% if raw_phone|length >= 9 %}
-                {% with raw_phone|slice:"-9:" as last_digits %}
-                  {% with "966"|add:last_digits as whatsapp_number %}
-                    <a href="https://wa.me/{{ whatsapp_number|urlencode }}?text={{ message|urlencode }}" target="_blank" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
-                      💬 واتساب
-                    </a>
-                  {% endwith %}
-                {% endwith %}
-              {% endif %}
-            {% endwith %}
+          {% with order.customer_phone|whatsapp_number as whatsapp_number %}
+            {% if whatsapp_number %}
+              {% with "طلبك من متجر "|add:order.store.name|add:" في طريقه إليك 🚚" as message %}
+                <a href="https://wa.me/{{ whatsapp_number }}?text={{ message|urlencode }}" target="_blank"
+                   class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                  💬 واتساب
+                </a>
+ 
+              {% endwith %}
+            {% else %}
+              <span class="text-sm text-red-500">📵 رقم غير صالح للواتساب</span>
+            {% endif %}
           {% endwith %}
+        {% endif %}
+
+        {% if order.customer_latitude and order.customer_longitude and order.store_latitude and order.store_longitude %}
+          <button onclick="openMapModal({{ order.store_latitude }}, {{ order.store_longitude }}, {{ order.customer_latitude }}, {{ order.customer_longitude }})"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition">
+            🗺️ عرض الخريطة
+          </button>
         {% endif %}
       </div>
     </div>
@@ -102,9 +112,9 @@
   function openMapModal(storeLat, storeLng, customerLat, customerLng) {
     document.getElementById("mapModal").classList.remove("hidden");
     const mapContainer = document.getElementById("leafletMap");
-    mapContainer.innerHTML = ""; // Clear previous map
-    const map = L.map("leafletMap").setView([storeLat, storeLng], 13);
+    mapContainer.innerHTML = "";
 
+    const map = L.map("leafletMap").setView([storeLat, storeLng], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
     }).addTo(map);
@@ -113,6 +123,7 @@
       .addTo(map)
       .bindPopup("🏪 المتجر")
       .openPopup();
+
     const customerMarker = L.marker([customerLat, customerLng])
       .addTo(map)
       .bindPopup("📍 العميل");

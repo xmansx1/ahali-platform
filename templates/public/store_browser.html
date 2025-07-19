@@ -7,18 +7,14 @@
   {% if messages %}
     <div class="mb-6 space-y-2">
       {% for message in messages %}
-        <div class="p-4 rounded text-sm font-medium {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-          {{ message }}
-        </div>
+        <div class="p-4 rounded text-sm font-medium {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">{{ message }}</div>
       {% endfor %}
     </div>
   {% endif %}
 
   <div class="flex justify-between items-center mb-6 border-b pb-3">
     <h2 class="text-2xl font-bold text-gray-800">🏪 المتاجر المتاحة للطلب</h2>
-    <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline flex items-center">
-      ← الرجوع للصفحة الرئيسية
-    </a>
+    <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline flex items-center">← الرجوع للصفحة الرئيسية</a>
   </div>
 
   <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
@@ -49,21 +45,26 @@
           <p class="text-sm text-gray-700 mb-1">📍 {{ store.address|default:"بدون عنوان" }}</p>
 
           {% if store.latitude and store.longitude %}
-            <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:'6' }},{{ store.longitude|floatformat:'6' }}" target="_blank" class="text-sm text-blue-600 hover:underline block mb-2">
-              🌍 عرض على الخريطة
-            </a>
+            <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:'6' }},{{ store.longitude|floatformat:'6' }}" target="_blank" class="text-sm text-blue-600 hover:underline block mb-2">🌍 عرض على الخريطة</a>
           {% else %}
             <p class="text-xs text-red-600 mb-2">⚠️ لم يتم تحديد موقع هذا المتجر</p>
           {% endif %}
 
-          <p class="text-sm text-gray-800 font-medium mb-3">
+          <p class="text-sm text-gray-800 font-medium mb-1">
             🚚 رسوم التوصيل : <span class="text-green-600 font-semibold">{{ store.customer_delivery_fee }} ريال</span>
           </p>
+
+          {% if store.delivery_policy_note %}
+            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-2 mb-3 shadow-sm">
+              ⚠️ {{ store.delivery_policy_note }}
+            </div>
+          {% endif %}
 
           <button onclick="openOrderForm({{ store.id }})" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm py-2.5 rounded-lg font-semibold transition">
             🛒 اطلب الآن
           </button>
 
+          <!-- ✅ نموذج الطلب -->
           <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg relative">
               <button onclick="closeOrderForm({{ store.id }})" class="absolute top-2 left-2 text-red-500 text-xl font-bold">&times;</button>
@@ -93,6 +94,7 @@
   {% endif %}
 </div>
 
+<!-- ✅ Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -105,10 +107,8 @@ function openOrderForm(storeId) {
   const latInput = form.querySelector('input[name="location_lat"]');
   const lngInput = form.querySelector('input[name="location_lng"]');
 
-  // لا تُنشئ الخريطة مجددًا إذا كانت مُحملة مسبقًا
   if (mapContainer.dataset.loaded) return;
 
-  // 🟡 الموقع الافتراضي: الرياض - حي الرمال
   const defaultLat = 24.8156;
   const defaultLng = 46.7643;
 
@@ -116,15 +116,12 @@ function openOrderForm(storeId) {
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
   const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-
-  // تحديث الإحداثيات عند تحريك الدبوس
   marker.on("dragend", function () {
     const { lat, lng } = marker.getLatLng();
     latInput.value = lat;
     lngInput.value = lng;
   });
 
-  // 🟢 محاولة تحديد الموقع الجغرافي تلقائيًا
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (pos) {
@@ -140,11 +137,7 @@ function openOrderForm(storeId) {
         latInput.value = defaultLat;
         lngInput.value = defaultLng;
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   } else {
     alert("❌ المتصفح لا يدعم تحديد الموقع الجغرافي.");
@@ -180,11 +173,7 @@ function reLocate(storeId) {
     function (err) {
       alert("❌ تعذر تحديد الموقع: " + err.message);
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
 
@@ -192,5 +181,4 @@ function closeOrderForm(storeId) {
   document.getElementById(`order-form-${storeId}`).classList.add("hidden");
 }
 </script>
-
 {% endblock %}

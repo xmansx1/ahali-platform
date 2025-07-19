@@ -34,7 +34,7 @@
       </p>
     </div>
 
-    <!-- النسبة التي يتحملها العميل -->
+    <!-- نسبة يتحملها العميل -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-700">🧮 نسبة يتحملها العميل من التوصيل (%)</label>
       {{ form.customer_delivery_share }}
@@ -44,6 +44,16 @@
       </p>
       <p id="customer-fee-preview" class="mt-2 text-sm text-gray-600">
         🚚 العميل يتحمل: <span id="calculated-fee">--</span> ريال
+      </p>
+    </div>
+
+    <!-- سياسة التوصيل -->
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">📢 سياسة التوصيل</label>
+      {{ form.delivery_policy_note }}
+      <p class="text-xs text-gray-500 mt-1">
+        هذا الحقل اختياري ويُعرض للعملاء عند تصفح المتجر. مثال:
+        <br><span class="text-green-700">🚚 التوصيل مجاني للطلبات فوق 50 ريال</span>
       </p>
     </div>
 
