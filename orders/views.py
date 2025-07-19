@@ -259,6 +259,7 @@ from .models import Order
 from stores.models import Store
 
 
+
 @csrf_protect
 def submit_store_order(request, store_id):
     store = get_object_or_404(Store, id=store_id)
@@ -271,6 +272,7 @@ def submit_store_order(request, store_id):
         location_lat = request.POST.get("location_lat")
         location_lng = request.POST.get("location_lng")
 
+        # ✅ التحقق من الحقول الأساسية
         if not all([full_name, phone_number, order_details, order_type]):
             messages.error(request, "يرجى تعبئة جميع الحقول المطلوبة.")
             return redirect('public_store_browser')
@@ -283,17 +285,19 @@ def submit_store_order(request, store_id):
             lat = None
             lng = None
 
+        # ✅ إنشاء الطلب
         order = Order.objects.create(
             store=store,
             customer_name=full_name,
             customer_phone=phone_number,
             details=order_details,
             delivery_type=order_type,
-            customer_location=f"{location_lat},{location_lng}" if lat and lng else "",
+            customer_location=f"{lat},{lng}" if lat and lng else "",
             latitude=lat,
             longitude=lng,
+            delivery_fee=store.delivery_fee,  # ✅ رسوم التوصيل من إعدادات المتجر
             created_at=timezone.now(),
-            status='new'
+            status=Order.Status.NEW
         )
 
         messages.success(request, "✅ تم إرسال الطلب بنجاح!")
@@ -301,6 +305,7 @@ def submit_store_order(request, store_id):
 
     messages.error(request, "طريقة الطلب غير صحيحة.")
     return redirect('public_store_browser')
+
 # ===============================
 # 📊 عدادات الطلبات للمشرف (JSON)
 # ===============================

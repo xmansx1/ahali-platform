@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+
 {% block title %}إعدادات المتجر{% endblock %}
 
 {% block content %}
@@ -6,16 +7,15 @@
   <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">⚙️ إعدادات المتجر</h2>
 
   {% if messages %}
-    <div class="mb-4 space-y-2">
-      {% for msg in messages %}
-        <div class="px-4 py-2 rounded shadow text-sm {% if msg.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-700{% endif %}">
-          {{ msg }}
-        </div>
-      {% endfor %}
+  <div class="mb-4 space-y-2">
+    {% for msg in messages %}
+    <div class="px-4 py-2 rounded shadow text-sm {% if msg.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-700{% endif %}">
+      {{ msg }}
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
-  <!-- ✅ نموذج تحديث بيانات المتجر -->
   <form method="POST" action="" class="space-y-5 mb-10">
     {% csrf_token %}
 
@@ -25,7 +25,29 @@
       {{ form.phone }}
     </div>
 
-    <!-- العنوان النصي -->
+    <!-- مبلغ التوصيل -->
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">🚚 مبلغ التوصيل (ريال)</label>
+      {{ form.delivery_fee }}
+      <p class="mt-2 text-xs text-yellow-700 bg-yellow-100 border border-yellow-200 px-3 py-2 rounded shadow-sm">
+        ⚠️ الحد الأدنى لمبلغ التوصيل هو <strong>10 ريال</strong>.
+      </p>
+    </div>
+
+    <!-- النسبة التي يتحملها العميل -->
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-700">🧮 نسبة يتحملها العميل من التوصيل (%)</label>
+      {{ form.customer_delivery_share }}
+      <p class="text-xs text-gray-500 mt-1">مثال: 40 تعني أن العميل يتحمل 40% من قيمة التوصيل.</p>
+      <p class="mt-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 px-3 py-2 rounded shadow-sm">
+        ℹ️ يجب أن تكون النسبة بين <strong>0%</strong> و <strong>100%</strong>.
+      </p>
+      <p id="customer-fee-preview" class="mt-2 text-sm text-gray-600">
+        🚚 العميل يتحمل: <span id="calculated-fee">--</span> ريال
+      </p>
+    </div>
+
+    <!-- عنوان المتجر -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-700">📍 عنوان المتجر</label>
       {{ form.address }}
@@ -40,19 +62,15 @@
     {{ form.latitude }}
     {{ form.longitude }}
 
-    <!-- ✅ checkbox متاح لاستقبال الطلبات -->
+    <!-- حالة استقبال الطلبات -->
     <div class="flex items-center gap-2">
       <input type="hidden" name="is_available" value="off">
-      <input type="checkbox"
-             id="id_is_available"
-             name="is_available"
-             value="on"
+      <input type="checkbox" id="id_is_available" name="is_available" value="on"
              {% if form.instance.is_available %}checked{% endif %}
              class="h-4 w-4 text-green-600 border-gray-300 rounded">
-      <label for="id_is_available" class="text-sm text-gray-700">متاح لاستقبال الطلبات</label>
+      <label for="id_is_available" class="text-sm text-gray-700">📦 المتجر متاح لاستقبال الطلبات</label>
     </div>
 
-    <!-- زر الحفظ -->
     <button type="submit" name="save_settings" value="1"
             class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium">
       💾 حفظ التغييرات
@@ -61,7 +79,6 @@
 
   <hr class="my-8">
 
-  <!-- ✅ تغيير كلمة المرور -->
   <h3 class="text-xl font-semibold text-gray-800 mb-4">🔒 تغيير كلمة المرور</h3>
   <form method="POST" action="">
     {% csrf_token %}
@@ -83,7 +100,8 @@
       </div>
     </div>
 
-    <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
+    <button type="submit"
+            class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-medium">
       🔐 تحديث كلمة المرور
     </button>
   </form>
@@ -91,36 +109,53 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Leaflet Map -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const latInput = document.getElementById("id_latitude");
     const lngInput = document.getElementById("id_longitude");
-
     const defaultLat = parseFloat(latInput.value || 24.7136);
     const defaultLng = parseFloat(lngInput.value || 46.6753);
-
-    const map = L.map('map').setView([defaultLat, defaultLng], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+    const map = L.map("map").setView([defaultLat, defaultLng], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
-
     const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-
-    marker.on('dragend', function () {
+    marker.on("dragend", function () {
       const { lat, lng } = marker.getLatLng();
       latInput.value = lat.toFixed(6);
       lngInput.value = lng.toFixed(6);
     });
-
-    map.on('click', function (e) {
+    map.on("click", function (e) {
       marker.setLatLng(e.latlng);
       latInput.value = e.latlng.lat.toFixed(6);
       lngInput.value = e.latlng.lng.toFixed(6);
     });
+
+    // حساب رسوم العميل تلقائيًا
+    function calculateCustomerFee() {
+      const feeInput = document.getElementById("id_delivery_fee");
+      const shareInput = document.getElementById("id_customer_delivery_share");
+      const output = document.getElementById("calculated-fee");
+      const fee = parseFloat(feeInput.value);
+      const share = parseFloat(shareInput.value);
+      if (!isNaN(fee) && !isNaN(share)) {
+        const customerFee = Math.round((fee * share) / 100);
+        output.textContent = customerFee;
+      } else {
+        output.textContent = "--";
+      }
+    }
+
+    const feeInput = document.getElementById("id_delivery_fee");
+    const shareInput = document.getElementById("id_customer_delivery_share");
+    if (feeInput && shareInput) {
+      feeInput.addEventListener("input", calculateCustomerFee);
+      shareInput.addEventListener("input", calculateCustomerFee);
+      calculateCustomerFee();
+    }
   });
 </script>
 {% endblock %}

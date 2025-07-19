@@ -38,17 +38,64 @@ def accept_order(request, order_id):
     return redirect('delivery_dashboard')
 
 # ✅ عرض الطلبات المسندة لهذا المندوب
+# ✅ عرض الطلبات المسندة لهذا المندوب
 @login_required
 def my_orders(request):
     if request.user.user_type != 'delivery':
         return redirect('login')
 
-    orders = Order.objects.filter(
-        assigned_to=request.user,
-        status='delivering'
-    ).order_by('-created_at')
+    orders = (
+        Order.objects.filter(
+            assigned_to=request.user,
+            status='delivering'
+        )
+        .select_related('store', 'store__user')  # ✅ تحميل بيانات المتجر والتاجر المرتبط لتحسين الأداء ومنع أخطاء القالب
+        .order_by('-created_at')
+    )
 
     return render(request, 'delivery/my_orders.html', {'orders': orders})
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.utils import timezone
+from orders.models import DeliveryPayment
+from orders.models import Order
+
+def pay_delivery_fee(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    # ✅ تحقق من أن الطلب يحتوي على مندوب معيّن
+    if not order.assigned_to:
+        messages.error(request, "لا يمكن تسجيل الدفع بدون وجود مندوب معين لهذا الطلب.")
+        return redirect('merchant_orders')  # أو اسم العرض المناسب
+
+    # ✅ تحقق من عدم وجود دفع مسبق
+    if hasattr(order, 'delivery_payment'):
+        messages.warning(request, "تم دفع مستحقات هذا الطلب مسبقاً.")
+        return redirect('merchant_orders')
+
+    if request.method == "POST":
+        payment_method = request.POST.get("payment_method")
+
+        if payment_method not in ["cash", "transfer"]:
+            messages.error(request, "يرجى تحديد طريقة دفع صحيحة.")
+            return redirect('merchant_orders')
+
+        DeliveryPayment.objects.create(
+            order=order,
+            paid_by=request.user,
+            paid_to=order.assigned_to,
+            amount=order.delivery_fee,  # ✅ استخدام مبلغ التوصيل مباشرة
+            payment_method=payment_method,
+            paid_at=timezone.now()
+        )
+
+        messages.success(request, "✅ تم تسجيل دفع مستحقات المندوب بنجاح.")
+        return redirect('merchant_orders')
+
+    messages.error(request, "طلب غير صالح.")
+    return redirect('merchant_orders')
+
 
 # ✅ إنهاء الطلب
 @login_required
@@ -122,6 +169,8 @@ from django.db.models import Sum
 from django.shortcuts import render
 from orders.models import Order, DeliveryPayment
 
+from django.db.models import Sum
+
 @login_required
 def delivery_earnings(request):
     user = request.user
@@ -136,11 +185,11 @@ def delivery_earnings(request):
     # ✅ المدفوعات التي تم استلامها
     payments = DeliveryPayment.objects.filter(paid_to=user).select_related('order__store')
 
-    # ✅ المجموع المدفوع
+    # ✅ المجموع المدفوع من سجل المدفوعات
     total_paid = payments.aggregate(total=Sum('amount'))['total'] or 0
 
-    # ✅ المجموع الغير مدفوع (كل طلب = 10 ريال)
-    total_unpaid = unpaid_orders.count() * 10
+    # ✅ المجموع الغير مدفوع بناء على delivery_fee لكل طلب
+    total_unpaid = unpaid_orders.aggregate(total=Sum('delivery_fee'))['total'] or 0
 
     # ✅ المتاجر التي لم تدفع بعد
     unpaid_stores = unpaid_orders.values('store__name').distinct()
@@ -153,4 +202,3 @@ def delivery_earnings(request):
         'unpaid_stores': unpaid_stores,
     }
     return render(request, 'delivery/earnings.html', context)
-

@@ -65,12 +65,19 @@ from django.contrib import messages
 from orders.models import Order, DeliveryPayment
 from datetime import datetime
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from orders.models import Order
+from orders.models import DeliveryPayment 
+
+
 @login_required
 def merchant_payments(request):
     if request.user.user_type != 'merchant':
         return redirect('home')
 
-    # جلب الطلبات المسلمة التي لم يتم دفع مستحقاتها بعد
+    # ✅ جلب الطلبات المسلمة المرتبطة بالمتجر والتي لم يتم دفعها
     orders = Order.objects.filter(
         store__user=request.user,
         status='delivered',
@@ -81,16 +88,33 @@ def merchant_payments(request):
     if request.method == "POST":
         order_id = request.POST.get("order_id")
         payment_method = request.POST.get("payment_method")
+
+        # ✅ التأكد من أن الطلب يخص هذا التاجر
         order = get_object_or_404(Order, id=order_id, store__user=request.user)
 
+        # ✅ التأكد أن المندوب موجود
+        if not order.assigned_to:
+            messages.error(request, "❌ لا يوجد مندوب مرتبط بهذا الطلب.")
+            return redirect('merchant_payments')
+
+        # ✅ التأكد أن الدفع لم يتم من قبل
+        if hasattr(order, 'delivery_payment'):
+            messages.warning(request, "⚠️ تم تسجيل الدفع لهذا الطلب من قبل.")
+            return redirect('merchant_payments')
+
+        # ✅ تسجيل الدفع باستخدام مبلغ التوصيل الفعلي
         DeliveryPayment.objects.create(
             order=order,
             paid_by=request.user,
             paid_to=order.assigned_to,
-            amount=10,
+            amount=order.delivery_fee,
             payment_method=payment_method
         )
-        messages.success(request, f"✅ تم دفع مستحقات المندوب {order.assigned_to.get_full_name()} بنجاح.")
+
+        messages.success(
+            request,
+            f"✅ تم دفع {order.delivery_fee} ريال للمندوب {order.assigned_to.get_full_name()} بنجاح."
+        )
         return redirect('merchant_payments')
 
     return render(request, 'stores/payments.html', {'orders': orders})

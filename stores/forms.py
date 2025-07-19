@@ -1,17 +1,21 @@
 from django import forms
 from stores.models import Store
 
-
 class StoreSettingsForm(forms.ModelForm):
     class Meta:
         model = Store
-        fields = ['phone', 'address', 'latitude', 'longitude', 'is_available']
+        fields = [
+            'phone', 'address', 'latitude', 'longitude',
+            'is_available', 'delivery_fee', 'customer_delivery_share'
+        ]
         labels = {
             'phone': '📞 رقم الجوال',
             'address': '📍 عنوان المتجر',
             'latitude': '📍 خط العرض',
             'longitude': '📍 خط الطول',
             'is_available': '📦 المتجر متاح لاستقبال الطلبات',
+            'delivery_fee': '🚚 مبلغ التوصيل (ريال)',
+            'customer_delivery_share': '🧮 النسبة التي يتحملها العميل من التوصيل (%)',
         }
         widgets = {
             'phone': forms.TextInput(attrs={
@@ -28,15 +32,39 @@ class StoreSettingsForm(forms.ModelForm):
             'is_available': forms.CheckboxInput(attrs={
                 'class': 'h-4 w-4 text-green-600 border-gray-300 rounded'
             }),
+            'delivery_fee': forms.NumberInput(attrs={
+                'class': 'w-full border rounded px-3 py-2',
+                'placeholder': 'مثال: 10.00',
+                'step': '0.50',
+                'min': '0'
+            }),
+            'customer_delivery_share': forms.NumberInput(attrs={
+                'class': 'w-full border rounded px-3 py-2',
+                'placeholder': 'مثال: 40 (يعني 40% يتحملها العميل)',
+                'step': '1',
+                'min': '0',
+                'max': '100'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.data:
             self.data = self.data.copy()
-            # 👇 تحويل string إلى Boolean
-            is_available = self.data.get('is_available')
-            self.data['is_available'] = is_available == 'on'
+            # ✅ تحويل checkbox إلى Boolean
+            self.data['is_available'] = self.data.get('is_available') == 'on'
+
+    def clean_delivery_fee(self):
+        value = self.cleaned_data.get('delivery_fee')
+        if value is not None and value < 10:
+            raise forms.ValidationError("🚫 الحد الأدنى لمبلغ التوصيل هو 10 ريال.")
+        return value
+
+    def clean_customer_delivery_share(self):
+        value = self.cleaned_data.get('customer_delivery_share')
+        if value is not None and not (0 <= value <= 100):
+            raise forms.ValidationError("⚠️ النسبة يجب أن تكون بين 0 و 100.")
+        return value
 
 
 class PasswordChangeForm(forms.Form):

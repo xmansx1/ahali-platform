@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from stores.models import Store
 
-
+from django.utils import timezone  # ✅ إضافة هذا في الأعلى
 
 class Order(models.Model):
     # 🏷️ الحالة
@@ -45,6 +45,14 @@ class Order(models.Model):
         choices=DeliveryType.choices
     )
 
+    # 💵 رسوم التوصيل (يُحدد من المتجر وقت إنشاء الطلب)
+    delivery_fee = models.DecimalField(
+        "رسوم التوصيل",
+        max_digits=6,
+        decimal_places=2,
+        default=0.0
+    )
+
     # 📌 الحالة الحالية
     status = models.CharField(
         "الحالة",
@@ -52,6 +60,9 @@ class Order(models.Model):
         choices=Status.choices,
         default=Status.NEW
     )
+
+    # ✅ وقت التسليم الفعلي
+    delivered_at = models.DateTimeField("وقت التسليم", null=True, blank=True)
 
     # 🚴‍♂️ المندوب
     assigned_to = models.ForeignKey(
@@ -100,6 +111,14 @@ class Order(models.Model):
     @property
     def store_longitude(self):
         return self.store.longitude if self.store and self.store.longitude else None
+
+    # ✅ تحديث وقت التسليم تلقائيًا
+    def save(self, *args, **kwargs):
+        if self.status == self.Status.DELIVERED and self.delivered_at is None:
+            self.delivered_at = timezone.now()
+        super().save(*args, **kwargs)
+
+
 class StoreOrder(models.Model):
     ORDER_TYPES = [
         ('pickup', 'استلام من المحل'),

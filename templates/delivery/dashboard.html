@@ -60,6 +60,7 @@
             </p>
             <p><strong>💰 المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
           </div>
+          <p><strong>💵 رسوم التوصيل:</strong> {{ order.delivery_fee|default:"-" }} ريال</p>
 
           <!-- ✅ أزرار التفاعل -->
           <div class="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">

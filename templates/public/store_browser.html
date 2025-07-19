@@ -4,23 +4,16 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow">
-
-  <!-- ✅ رسائل Django -->
   {% if messages %}
     <div class="mb-6 space-y-2">
       {% for message in messages %}
-        <div class="p-4 rounded text-sm font-medium
-            {% if message.tags == 'success' %} bg-green-100 text-green-800
-            {% elif message.tags == 'error' %} bg-red-100 text-red-800
-            {% else %} bg-gray-100 text-gray-800
-            {% endif %}">
+        <div class="p-4 rounded text-sm font-medium {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
           {{ message }}
         </div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <!-- ✅ العنوان والرجوع -->
   <div class="flex justify-between items-center mb-6 border-b pb-3">
     <h2 class="text-2xl font-bold text-gray-800">🏪 المتاجر المتاحة للطلب</h2>
     <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline flex items-center">
@@ -28,13 +21,10 @@
     </a>
   </div>
 
-  <!-- ✅ نموذج البحث والفلترة -->
   <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
     <div>
       <label class="block text-sm text-gray-600 mb-1">🔍 البحث عن متجر</label>
-      <input type="text" name="q" value="{{ request.GET.q }}"
-             class="px-4 py-2 border rounded-lg w-64 focus:ring focus:border-blue-500"
-             placeholder="اسم المتجر أو الموقع...">
+      <input type="text" name="q" value="{{ request.GET.q }}" class="px-4 py-2 border rounded-lg w-64 focus:ring focus:border-blue-500" placeholder="اسم المتجر أو الموقع...">
     </div>
     <div>
       <label class="block text-sm text-gray-600 mb-1">🏷️ نوع المتجر</label>
@@ -47,69 +37,51 @@
     </div>
     <div>
       <label class="block invisible text-sm mb-1">بحث</label>
-      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">
-        🔍 بحث
-      </button>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">🔍 بحث</button>
     </div>
   </form>
 
-  <!-- ✅ عرض المتاجر -->
   {% if stores %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for store in stores %}
-        <div class="border rounded-lg p-4 shadow hover:shadow-md transition">
-          <h3 class="text-lg font-semibold text-blue-700 mb-1">🏪 {{ store.name|default:"اسم المتجر غير متوفر" }}</h3>
-          <p class="text-sm text-gray-600 mb-2">{{ store.address|default:"بدون عنوان" }}</p>
+        <div class="border rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white">
+          <h3 class="text-lg font-bold text-blue-800 mb-1">🏪 {{ store.name|default:"اسم المتجر غير متوفر" }}</h3>
+          <p class="text-sm text-gray-700 mb-1">📍 {{ store.address|default:"بدون عنوان" }}</p>
 
           {% if store.latitude and store.longitude %}
-              <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:"6" }},{{ store.longitude|floatformat:"6" }}" 
-               target="_blank" class="text-blue-500 text-sm hover:underline block mb-2">
-              📍 عرض على الخريطة
+            <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:'6' }},{{ store.longitude|floatformat:'6' }}" target="_blank" class="text-sm text-blue-600 hover:underline block mb-2">
+              🌍 عرض على الخريطة
             </a>
           {% else %}
-            <p class="text-xs text-red-500">⚠️ لم يتم تحديد موقع هذا المتجر</p>
+            <p class="text-xs text-red-600 mb-2">⚠️ لم يتم تحديد موقع هذا المتجر</p>
           {% endif %}
 
-          <button onclick="openOrderForm({{ store.id }})"
-                  class="mt-2 bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700 w-full transition">
+          <p class="text-sm text-gray-800 font-medium mb-3">
+            🚚 رسوم التوصيل : <span class="text-green-600 font-semibold">{{ store.customer_delivery_fee }} ريال</span>
+          </p>
+
+          <button onclick="openOrderForm({{ store.id }})" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm py-2.5 rounded-lg font-semibold transition">
             🛒 اطلب الآن
           </button>
 
-          <!-- ✅ نموذج الطلب -->
           <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg relative">
-              <button onclick="closeOrderForm({{ store.id }})"
-                      class="absolute top-2 left-2 text-red-500 text-xl font-bold">×</button>
-
+              <button onclick="closeOrderForm({{ store.id }})" class="absolute top-2 left-2 text-red-500 text-xl font-bold">&times;</button>
               <form method="post" action="{% url 'submit_store_order' store.id %}" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="store_name" value="{{ store.name }}">
-
-                <input type="text" name="full_name" placeholder="الاسم الكامل"
-                       class="w-full border p-2 rounded" required>
-                <input type="text" name="phone_number" placeholder="رقم الجوال"
-                       class="w-full border p-2 rounded" required>
-                <textarea name="order_details" placeholder="تفاصيل الطلب..."
-                          class="w-full border p-2 rounded" rows="3" required></textarea>
-
+                <input type="text" name="full_name" placeholder="الاسم الكامل" class="w-full border p-2 rounded" required>
+                <input type="text" name="phone_number" placeholder="رقم الجوال" class="w-full border p-2 rounded" required>
+                <textarea name="order_details" placeholder="تفاصيل الطلب..." class="w-full border p-2 rounded" rows="3" required></textarea>
                 <div class="flex gap-4 text-sm">
                   <label><input type="radio" name="order_type" value="pickup" required> استلام</label>
                   <label><input type="radio" name="order_type" value="delivery"> توصيل</label>
                 </div>
-
                 <div id="map-{{ store.id }}" class="h-48 w-full border rounded"></div>
-
-                <button type="button" onclick="reLocate({{ store.id }})"
-                        class="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-1 rounded mt-2">
-                  📍 تحديد موقعي تلقائيًا
-                </button>
-
+                <button type="button" onclick="reLocate({{ store.id }})" class="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-1 rounded mt-2">📍 تحديد موقعي تلقائيًا</button>
                 <input type="hidden" name="location_lat">
                 <input type="hidden" name="location_lng">
-
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
-                  إرسال الطلب
-                </button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">إرسال الطلب</button>
               </form>
             </div>
           </div>
@@ -121,7 +93,6 @@
   {% endif %}
 </div>
 
-<!-- ✅ Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -134,19 +105,26 @@ function openOrderForm(storeId) {
   const latInput = form.querySelector('input[name="location_lat"]');
   const lngInput = form.querySelector('input[name="location_lng"]');
 
+  // لا تُنشئ الخريطة مجددًا إذا كانت مُحملة مسبقًا
   if (mapContainer.dataset.loaded) return;
 
-  const map = L.map(`map-${storeId}`).setView([24.7136, 46.6753], 13);
+  // 🟡 الموقع الافتراضي: الرياض - حي الرمال
+  const defaultLat = 24.8156;
+  const defaultLng = 46.7643;
+
+  const map = L.map(`map-${storeId}`).setView([defaultLat, defaultLng], 13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  const marker = L.marker([24.7136, 46.6753], { draggable: true }).addTo(map);
+  const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
 
+  // تحديث الإحداثيات عند تحريك الدبوس
   marker.on("dragend", function () {
     const { lat, lng } = marker.getLatLng();
     latInput.value = lat;
     lngInput.value = lng;
   });
 
+  // 🟢 محاولة تحديد الموقع الجغرافي تلقائيًا
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function (pos) {
@@ -155,11 +133,21 @@ function openOrderForm(storeId) {
         marker.setLatLng([latitude, longitude]);
         latInput.value = latitude;
         lngInput.value = longitude;
+        console.log("✅ تم تحديد موقعك تلقائيًا.");
       },
       function (err) {
-        console.warn("فشل في تحديد الموقع:", err.message);
+        alert("⚠️ لم نتمكن من تحديد موقعك تلقائيًا، سيتم تعيين موقع افتراضي (حي الرمال).\nالسبب: " + err.message);
+        latInput.value = defaultLat;
+        lngInput.value = defaultLng;
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
+  } else {
+    alert("❌ المتصفح لا يدعم تحديد الموقع الجغرافي.");
   }
 
   mapContainer.dataset.loaded = true;
@@ -171,7 +159,7 @@ function reLocate(storeId) {
   const map = L.DomUtil.get(`map-${storeId}`)._leaflet_map;
 
   if (!navigator.geolocation) {
-    alert("المتصفح لا يدعم تحديد الموقع.");
+    alert("❌ المتصفح لا يدعم تحديد الموقع.");
     return;
   }
 
@@ -204,4 +192,5 @@ function closeOrderForm(storeId) {
   document.getElementById(`order-form-${storeId}`).classList.add("hidden");
 }
 </script>
+
 {% endblock %}

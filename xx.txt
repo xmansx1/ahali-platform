@@ -3,7 +3,7 @@ env\Scripts\activate
 python manage.py runserver
 
 git add . 
-git commit -m "الرفع102ريندر"
+git commit -m "الرفع103ريندر"
 git push origin main
 
 
@@ -26,3 +26,23 @@ python manage.py collectstatic --noinput
 copy .env.development .env
 
 python manage.py runserver
+
+--------------------------------
+نحتاج المتغيرات في بيئة الانتاج 
+
+ENVIRONMENT=production
+DEBUG=False
+
+SECRET_KEY=u)vypmxs+0+93ckk!z$@-qu9fv%#x9*3!a(dq)lp8*09$z@y8l
+
+# 🗄️ قاعدة البيانات PostgreSQL من Render
+DATABASE_URL=postgresql://ahali_db_umeb_user:KxjWhqnbLMhJlvpLLzMUrNuzWaFALqHz@dpg-d1sf2c2dbo4c73895ccg-a/ahali_db_umeb
+
+ALLOWED_HOSTS=ahali-platform.onrender.com,.onrender.com
+
+# ☁️ Cloudinary
+CLOUDINARY_CLOUD_NAME=dvptglfs2
+CLOUDINARY_API_KEY=997257163374881
+CLOUDINARY_API_SECRET=u5XPED3CQa2gd7PyHuEaw7BFsbY
+
+------------------------

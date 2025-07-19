@@ -2,43 +2,29 @@ services:
   - type: web
     name: ahli-platform
     env: python
-    repo: https://github.com/xmansx1/ahali-platform
-    branch: main
-
+    region: frankfurt
     buildCommand: |
-      pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
+      python manage.py migrate
 
-    startCommand: gunicorn config.wsgi:application
-
+    startCommand: "gunicorn config.wsgi:application"
+    plan: free
+    runtime: python
+    branch: main
+    autoDeploy: true
     envVars:
-      - key: SECRET_KEY
-        value: u)vypmxs+0+93ckk!z$@-qu9fv%#x9*3!a(dq)lp8*09$z@y8l
-
-      - key: DEBUG
-        value: False
-
       - key: ENVIRONMENT
         value: production
-
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings
-
-      - key: PROD_ALLOWED_HOSTS
-        value: ahali-platform.onrender.com,render.com,.onrender.com
-
+      - key: SECRET_KEY
+        value: u)vypmxs+0+93ckk!z$@-qu9fv%#x9*3!a(dq)lp8*09$z@y8l
+      - key: DATABASE_URL
+        value: postgresql://ahali_db_umeb_user:KxjWhqnbLMhJlvpLLzMUrNuzWaFALqHz@dpg-d1sf2c2dbo4c73895ccg-a/ahali_db_umeb
+      - key: ALLOWED_HOSTS
+        value: ahli-platform.onrender.com,.onrender.com
       - key: CLOUDINARY_CLOUD_NAME
         value: dvptglfs2
       - key: CLOUDINARY_API_KEY
         value: 997257163374881
       - key: CLOUDINARY_API_SECRET
         value: u5XPED3CQa2gd7PyHuEaw7BFsbY
-
-      - key: PYTHON_VERSION
-        value: 3.12
-
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ahli-db
-          property: connectionString
