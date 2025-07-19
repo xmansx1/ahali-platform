@@ -45,3 +45,60 @@ from .models import Advertisement
 def ad_detail(request, ad_id):
     ad = get_object_or_404(Advertisement, pk=ad_id, is_active=True)
     return render(request, 'ads/ad_detail.html', {'ad': ad})
+
+from ads.models import WelcomePopup
+
+def home(request):
+    popup = WelcomePopup.objects.filter(is_active=True).order_by('-created_at').first()
+    return render(request, 'core/home.html', {'popup': popup})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import WelcomePopup
+from .forms import WelcomePopupForm
+from django.contrib import messages
+
+def popup_list(request):
+    popups = WelcomePopup.objects.all()
+    return render(request, 'ads/popup_list.html', {'popups': popups})
+
+
+# ➕ إنشاء نافذة جديدة
+def popup_create(request):
+    if request.method == 'POST':
+        form = WelcomePopupForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "تم إضافة النافذة الترحيبية بنجاح.")
+            return redirect('ads:popup_list')
+    else:
+        form = WelcomePopupForm()
+    return render(request, 'ads/popup_form.html', {'form': form, 'title': 'إضافة نافذة ترحيبية'})
+
+# ✏️ تعديل نافذة
+def popup_edit(request, popup_id):
+    popup = get_object_or_404(WelcomePopup, pk=popup_id)
+
+    if request.method == 'POST':
+        form = WelcomePopupForm(request.POST, instance=popup)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "تم تعديل النافذة بنجاح.")
+            return redirect('ads:popup_list')
+    else:
+        form = WelcomePopupForm(instance=popup)
+    return render(request, 'ads/popup_form.html', {'form': form, 'title': 'تعديل النافذة الترحيبية'})
+
+# ❌ حذف نافذة
+def popup_delete(request, pk):
+    popup = get_object_or_404(WelcomePopup, pk=pk)
+    popup.delete()
+    messages.success(request, "تم حذف النافذة.")
+    return redirect('ads:popup_list')
+
+# 🔄 تفعيل/تعطيل
+def popup_toggle(request, pk):
+    popup = get_object_or_404(WelcomePopup, pk=pk)
+    popup.is_active = not popup.is_active
+    popup.save()
+    messages.success(request, f"تم {'تفعيل' if popup.is_active else 'تعطيل'} النافذة.")
+    return redirect('ads:popup_list')

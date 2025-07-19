@@ -10,4 +10,8 @@ urlpatterns = [
     path('admin/<int:ad_id>/delete/', views.ad_delete, name='ad_delete'),
     path('<int:ad_id>/', views.ad_detail, name='ad_detail'),
     path('<int:ad_id>/', views.ad_detail, name='detail'),
+    path('welcome-popups/', views.popup_list, name='popup_list'),
+    path('welcome-popups/create/', views.popup_create, name='popup_create'),
+    path('welcome-popups/<int:popup_id>/edit/', views.popup_edit, name='popup_edit'),
+    path('welcome-popups/<int:popup_id>/delete/', views.popup_delete, name='popup_delete'),
 ]

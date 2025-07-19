@@ -4,6 +4,22 @@
 
 <div class="space-y-24">
 
+  <!-- ✅ نافذة الترحيب المنبثقة -->
+  {% if popup and popup.is_active %}
+  <div id="welcome-popup"
+       class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center transition-opacity">
+    <div onclick="event.stopPropagation()"
+         class="bg-white rounded-xl p-6 max-w-md w-full text-center relative shadow-xl animate-fade-in">
+      <button onclick="closeWelcomePopup()"
+              class="absolute top-3 left-3 text-gray-400 hover:text-red-600 text-2xl">
+        &times;
+      </button>
+      <h3 class="text-2xl font-bold text-blue-700 mb-3">{{ popup.title }}</h3>
+      <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ popup.message }}</p>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- 🟦 ترحيب -->
   <section class="bg-gradient-to-br from-blue-50 to-white text-center py-20 px-4 sm:px-8 rounded-xl shadow">
     <h1 class="text-5xl font-extrabold text-gray-800 mb-4">
@@ -13,16 +29,18 @@
       منصة مخصصة لأهالي حي <strong>تنال</strong> لتسهيل الطلب من المتاجر المحلية، متابعة الإعلانات والمشاركة المجتمعية.
     </p>
     <div class="flex flex-col sm:flex-row justify-center gap-4 flex-wrap">
-      <a href="{% url 'login' %}" class="px-8 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+      <a href="{% url 'login' %}"
+         class="px-8 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
         🔐 تسجيل الدخول
       </a>
-      <a href="{% url 'public_store_browser' %}" class="px-8 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+      <a href="{% url 'public_store_browser' %}"
+         class="px-8 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
         🛍️ المتاجر المتاحة الآن
       </a>
     </div>
   </section>
 
-  <!-- 💡 مميزات المنصة -->
+  <!-- 💡 المميزات -->
   <section id="features" class="max-w-7xl mx-auto px-4 sm:px-8">
     <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">✨ ماذا تقدم المنصة؟</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
@@ -41,14 +59,13 @@
     </div>
   </section>
 
-  <!-- 📢 الإعلانات المميزة -->
+  <!-- 📢 الإعلانات -->
   {% if ads %}
   <section class="max-w-7xl mx-auto px-4 sm:px-8 py-12">
     <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">📢 إعلانات الحي</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
       {% for ad in ads %}
-      <!-- 🧱 كرت الإعلان المحسن -->
       <div onclick="openAdModal({{ ad.id }})"
            class="cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden flex flex-col group">
         <div class="relative w-full aspect-[4/3] bg-gray-100">
@@ -72,12 +89,12 @@
         </div>
       </div>
 
-      <!-- 💬 نافذة عرض الإعلان -->
-      <div id="ad-modal-{{ ad.id }}" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-        <div onclick="event.stopPropagation()" class="bg-white rounded-xl max-w-xl w-full p-6 relative animate-fade-in">
-          <button onclick="closeAdModal({{ ad.id }})" class="absolute top-3 left-3 text-gray-400 hover:text-red-600 text-2xl">
-            &times;
-          </button>
+      <div id="ad-modal-{{ ad.id }}"
+           class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+        <div onclick="event.stopPropagation()"
+             class="bg-white rounded-xl max-w-xl w-full p-6 relative animate-fade-in">
+          <button onclick="closeAdModal({{ ad.id }})"
+                  class="absolute top-3 left-3 text-gray-400 hover:text-red-600 text-2xl">&times;</button>
           {% if ad.image %}
           <img src="{{ ad.image.url }}" alt="{{ ad.title }}"
                class="rounded-lg mb-4 w-full max-h-[60vh] object-contain mx-auto" />
@@ -100,8 +117,26 @@
 
 </div>
 
-<!-- 🧠 Scripts -->
+<!-- ✅ Scripts -->
 <script>
+  // نافذة الترحيب
+  function closeWelcomePopup() {
+    document.getElementById('welcome-popup').classList.add('hidden');
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('popupShown', today);
+  }
+
+  window.addEventListener('load', () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (localStorage.getItem('popupShown') === today) {
+      const popup = document.getElementById('welcome-popup');
+      if (popup) popup.classList.add('hidden');
+    } else {
+      setTimeout(closeWelcomePopup, 10000);
+    }
+  });
+
+  // الإعلانات
   function openAdModal(id) {
     document.getElementById(`ad-modal-${id}`).classList.remove("hidden");
   }
@@ -120,7 +155,6 @@
   });
 </script>
 
-<!-- 💫 Fade-in Animation -->
 <style>
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;

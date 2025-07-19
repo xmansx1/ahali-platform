@@ -1,0 +1,37 @@
+{% if welcome_popup %}
+<script>
+  const lastShown = localStorage.getItem("popupLastShown");
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (lastShown !== today) {
+    localStorage.setItem("popupLastShown", today);
+
+    setTimeout(() => {
+      const popupOverlay = document.createElement("div");
+      popupOverlay.id = "welcomePopup";
+      popupOverlay.className = "fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50";
+
+      popupOverlay.innerHTML = `
+        <div class="bg-white p-6 rounded-xl shadow max-w-md text-center">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ welcome_popup.title }}</h2>
+          <p class="text-gray-700 mb-6">{{ welcome_popup.message|linebreaks }}</p>
+          <button onclick="closePopup()" class="bg-green-600 text-white px-4 py-2 rounded">إغلاق</button>
+        </div>
+      `;
+
+      document.body.appendChild(popupOverlay);
+
+      // ❌ الإخفاء التلقائي بعد 10 ثوانٍ
+      setTimeout(() => {
+        closePopup();
+      }, 10000);
+    }, 1000);
+  }
+
+  // ✅ دالة إغلاق النافذة يدويًا
+  function closePopup() {
+    const el = document.getElementById("welcomePopup");
+    if (el) el.remove();
+  }
+</script>
+{% endif %}

@@ -1,13 +1,24 @@
 from django.shortcuts import render
-from ads.models import Advertisement
+from ads.models import Advertisement, PopupMessage
+from django.utils import timezone
 
 def home(request):
+    # ✅ جلب الإعلانات العادية
     ads = Advertisement.objects.filter(is_active=True).order_by('-id')[:6]
 
+    # ✅ جلب نافذة منبثقة صالحة
+    now = timezone.now()
+    popup = (
+        PopupMessage.objects
+        .filter(is_active=True, start_date__lte=now)
+        .filter(end_date__isnull=True) | PopupMessage.objects.filter(end_date__gte=now)
+    ).order_by('-created_at').first()
+
     return render(request, 'core/home.html', {
-        'ads': ads
+        'ads': ads,
+        'popup': popup
     })
-    
+
     
 from django.shortcuts import render
 from django.db.models import Q

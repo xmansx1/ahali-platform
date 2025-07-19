@@ -1,102 +1,68 @@
-{% extends 'core/base.html' %} {% load static %} {% block title %}لوحة المشرف -
-منصة أهالي الحي{% endblock %} {% block content %}
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}لوحة المشرف - منصة أهالي الحي{% endblock %}
+
+{% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-  <h1
-    class="text-3xl font-bold text-gray-800 mb-8 border-b pb-3 flex items-center gap-2"
-  >
+  <!-- ✅ العنوان -->
+  <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-3 flex items-center gap-2">
     📊 لوحة تحكم المشرف
   </h1>
 
   <!-- 🔢 الإحصائيات -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
-    <div
-      class="bg-white border-t-4 border-blue-500 rounded-xl shadow p-4 text-center"
-    >
+    <div class="bg-white border-t-4 border-blue-500 rounded-xl shadow p-4 text-center">
       <div class="text-sm text-gray-500">📦 إجمالي الطلبات</div>
-      <div class="text-3xl font-extrabold text-blue-600 mt-2">
-        {{ total_orders }}
-      </div>
+      <div class="text-3xl font-extrabold text-blue-600 mt-2">{{ total_orders }}</div>
     </div>
-    <div
-      class="bg-white border-t-4 border-yellow-500 rounded-xl shadow p-4 text-center"
-    >
+    <div class="bg-white border-t-4 border-yellow-500 rounded-xl shadow p-4 text-center">
       <div class="text-sm text-gray-500">🚚 طلبات قيد التوصيل</div>
-      <div class="text-3xl font-extrabold text-yellow-600 mt-2">
-        {{ delivering_orders }}
-      </div>
+      <div class="text-3xl font-extrabold text-yellow-600 mt-2">{{ delivering_orders }}</div>
     </div>
-    <div
-      class="bg-white border-t-4 border-green-500 rounded-xl shadow p-4 text-center"
-    >
+    <div class="bg-white border-t-4 border-green-500 rounded-xl shadow p-4 text-center">
       <div class="text-sm text-gray-500">🏪 عدد التجار</div>
-      <div class="text-3xl font-extrabold text-green-600 mt-2">
-        {{ merchants }}
-      </div>
+      <div class="text-3xl font-extrabold text-green-600 mt-2">{{ merchants }}</div>
     </div>
-    <div
-      class="bg-white border-t-4 border-red-500 rounded-xl shadow p-4 text-center"
-    >
+    <div class="bg-white border-t-4 border-red-500 rounded-xl shadow p-4 text-center">
       <div class="text-sm text-gray-500">🚴‍♂️ عدد المندوبين</div>
-      <div class="text-3xl font-extrabold text-red-600 mt-2">
-        {{ delivery_users }}
-      </div>
+      <div class="text-3xl font-extrabold text-red-600 mt-2">{{ delivery_users }}</div>
     </div>
-    <div
-      class="bg-white border-t-4 border-orange-500 rounded-xl shadow p-4 text-center"
-    >
+    <div class="bg-white border-t-4 border-orange-500 rounded-xl shadow p-4 text-center">
       <div class="text-sm text-gray-500">📢 عدد الإعلانات</div>
-      <div class="text-3xl font-extrabold text-orange-600 mt-2">
-        {{ ads_count }}
-      </div>
+      <div class="text-3xl font-extrabold text-orange-600 mt-2">{{ ads_count }}</div>
     </div>
   </div>
 
   <!-- 🧭 روابط إدارية -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-    <a
-      href="{% url 'admin_users' %}"
-      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow"
-    >
+    <a href="{% url 'admin_users' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow">
       👥 إدارة المستخدمين
     </a>
-    <a
-      href="{% url 'admin_orders' %}"
-      class="bg-green-600 hover:bg-green-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow"
-    >
+    <a href="{% url 'admin_orders' %}" class="bg-green-600 hover:bg-green-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow">
       📑 الطلبات المسلمة
     </a>
-    <a
-      href="{% url 'admin_stores' %}"
-      class="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow"
-    >
+    <a href="{% url 'admin_stores' %}" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow">
       🏪 إدارة المتاجر
     </a>
-    <a
-      href="{% url 'ads:admin_ads_list' %}"
-      class="bg-orange-600 hover:bg-orange-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow"
-    >
+    <a href="{% url 'ads:admin_ads_list' %}" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow">
       📢 إدارة الإعلانات
+    </a>
+    <a href="{% url 'ads:popup_list' %}" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold text-center py-3 px-4 rounded-lg shadow">
+      🎉 إدارة النوافذ الترحيبية
     </a>
   </div>
 
   <!-- ⚠️ المتاجر غير النشطة -->
   {% if inactive_stores %}
   <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg shadow">
-    <h2 class="text-lg font-semibold text-yellow-800 mb-4">
-      ⚠️ متاجر غير مفعّلة
-    </h2>
+    <h2 class="text-lg font-semibold text-yellow-800 mb-4">⚠️ متاجر غير مفعّلة</h2>
     <ul class="space-y-4">
       {% for store in inactive_stores %}
-      <li
-        class="bg-white rounded-md shadow flex justify-between items-center px-4 py-3"
-      >
+      <li class="bg-white rounded-md shadow flex justify-between items-center px-4 py-3">
         <span class="text-gray-800 font-medium">{{ store.name }}</span>
         <form method="post" action="{% url 'activate_store' store.id %}">
           {% csrf_token %}
-          <button
-            type="submit"
-            class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded"
-          >
+          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-1.5 rounded">
             ✅ تفعيل المتجر
           </button>
         </form>
