@@ -20,10 +20,11 @@ from .models import WelcomePopup
 class WelcomePopupForm(forms.ModelForm):
     class Meta:
         model = WelcomePopup
-        fields = ['title', 'message', 'is_active']
+        fields = ['title', 'message', 'image', 'is_active']
         labels = {
             'title': 'عنوان النافذة',
-            'text': 'نص الرسالة',
+            'message': 'نص الرسالة',
+            'image': 'صورة ترحيبية (اختياري)',
             'is_active': 'مفعلة؟',
         }
         widgets = {
@@ -31,9 +32,12 @@ class WelcomePopupForm(forms.ModelForm):
                 'class': 'w-full border px-4 py-2 rounded',
                 'placeholder': 'مثال: مرحبًا بكم في المنصة'
             }),
-            'text': forms.Textarea(attrs={
+            'message': forms.Textarea(attrs={
                 'class': 'w-full border px-4 py-2 rounded h-32',
                 'placeholder': 'نص الرسالة الترحيبية'
+            }),
+            'image': forms.ClearableFileInput(attrs={
+                'class': 'w-full border px-2 py-1 rounded'
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'form-checkbox h-5 w-5 text-blue-600'

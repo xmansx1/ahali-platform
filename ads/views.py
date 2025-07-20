@@ -57,15 +57,15 @@ from .models import WelcomePopup
 from .forms import WelcomePopupForm
 from django.contrib import messages
 
+# 📋 عرض قائمة النوافذ
 def popup_list(request):
     popups = WelcomePopup.objects.all()
     return render(request, 'ads/popup_list.html', {'popups': popups})
 
-
 # ➕ إنشاء نافذة جديدة
 def popup_create(request):
     if request.method == 'POST':
-        form = WelcomePopupForm(request.POST)
+        form = WelcomePopupForm(request.POST, request.FILES)  # ✅ تم التعديل هنا
         if form.is_valid():
             form.save()
             messages.success(request, "تم إضافة النافذة الترحيبية بنجاح.")
@@ -77,9 +77,8 @@ def popup_create(request):
 # ✏️ تعديل نافذة
 def popup_edit(request, popup_id):
     popup = get_object_or_404(WelcomePopup, pk=popup_id)
-
     if request.method == 'POST':
-        form = WelcomePopupForm(request.POST, instance=popup)
+        form = WelcomePopupForm(request.POST, request.FILES, instance=popup)  # ✅ تم التعديل هنا
         if form.is_valid():
             form.save()
             messages.success(request, "تم تعديل النافذة بنجاح.")

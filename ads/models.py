@@ -15,14 +15,18 @@ class Advertisement(models.Model):
         return self.title
 
 # ✅ نافذة ترحيب عند زيارة الموقع لأول مرة في اليوم
+from django.db import models
+
 class WelcomePopup(models.Model):
     title = models.CharField("عنوان الرسالة", max_length=200)
     message = models.TextField("محتوى الرسالة")
+    image = models.ImageField("الصورة (اختياري)", upload_to="popups/", blank=True, null=True)  # ✅ الحقل الجديد
     is_active = models.BooleanField("مفعل", default=True)
     created_at = models.DateTimeField("تاريخ الإضافة", auto_now_add=True)
 
     def __str__(self):
         return self.title
+
 
 # ✅ نافذة منبثقة مخصصة قابلة للتوقيت
 class PopupMessage(models.Model):

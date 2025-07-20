@@ -2,26 +2,33 @@
 {% block title %}النوافذ الترحيبية{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+  <!-- ✅ العنوان وزر الإضافة -->
   <div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">🎉 النوافذ الترحيبية</h2>
-    <a href="{% url 'ads:popup_create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">➕ إضافة نافذة</a>
+    <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+      🎉 النوافذ الترحيبية
+    </h2>
+    <a href="{% url 'ads:popup_create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
+      ➕ إضافة نافذة
+    </a>
   </div>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
+  <!-- ✅ جدول عرض النوافذ -->
+  <div class="bg-white rounded-xl shadow overflow-x-auto">
     <table class="w-full text-sm text-right text-gray-700">
-      <thead class="bg-gray-100">
+      <thead class="bg-gray-100 text-gray-800 text-sm font-semibold">
         <tr>
-          <th class="px-4 py-3">العنوان</th>
-          <th class="px-4 py-3">مفعل؟</th>
-          <th class="px-4 py-3">تاريخ الإضافة</th>
-          <th class="px-4 py-3 text-center">الخيارات</th>
+          <th class="px-4 py-3">📌 العنوان</th>
+          <th class="px-4 py-3">✅ مفعل؟</th>
+          <th class="px-4 py-3">🕓 تاريخ الإضافة</th>
+          <th class="px-4 py-3 text-center">⚙️ الخيارات</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-gray-100">
         {% for popup in popups %}
-        <tr class="border-b">
-          <td class="px-4 py-3">{{ popup.title }}</td>
+        <tr class="hover:bg-gray-50 transition-all duration-200">
+          <td class="px-4 py-3 font-medium">{{ popup.title }}</td>
           <td class="px-4 py-3">
             {% if popup.is_active %}
               <span class="text-green-600 font-semibold">نعم</span>
@@ -30,17 +37,21 @@
             {% endif %}
           </td>
           <td class="px-4 py-3 text-gray-500">{{ popup.created_at|date:"Y-m-d H:i" }}</td>
-          <td class="px-4 py-3 text-center space-x-2">
-            <a href="{% url 'ads:popup_edit' popup.id %}" class="text-blue-600 hover:underline">تعديل</a>
+          <td class="px-4 py-3 text-center space-x-2 space-y-1">
+            <a href="{% url 'ads:popup_edit' popup.id %}" class="text-blue-600 hover:underline font-medium">تعديل</a>
             <form action="{% url 'ads:popup_delete' popup.id %}" method="post" class="inline">
               {% csrf_token %}
-              <button onclick="return confirm('هل أنت متأكد من الحذف؟');" class="text-red-600 hover:underline">حذف</button>
+              <button type="submit" onclick="return confirm('هل أنت متأكد من الحذف؟');" class="text-red-600 hover:underline font-medium">
+                حذف
+              </button>
             </form>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="4" class="text-center py-4 text-gray-400">لا توجد نوافذ ترحيبية حالياً.</td>
+          <td colspan="4" class="text-center py-6 text-gray-400">
+            لا توجد نوافذ ترحيبية حالياً.
+          </td>
         </tr>
         {% endfor %}
       </tbody>

@@ -11,27 +11,54 @@
       popupOverlay.id = "welcomePopup";
       popupOverlay.className = "fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50";
 
-      popupOverlay.innerHTML = `
-        <div class="bg-white p-6 rounded-xl shadow max-w-md text-center">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ welcome_popup.title }}</h2>
-          <p class="text-gray-700 mb-6">{{ welcome_popup.message|linebreaks }}</p>
-          <button onclick="closePopup()" class="bg-green-600 text-white px-4 py-2 rounded">إغلاق</button>
-        </div>
+      const popupBox = document.createElement("div");
+      popupBox.className = "bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center relative animate-fade-in";
+
+      // ✅ العنوان
+      const title = `<h2 class="text-2xl font-bold text-gray-800 mb-4">{{ welcome_popup.title }}</h2>`;
+
+      // ✅ الصورة (إن وجدت)
+      let image = "";
+      {% if welcome_popup.image %}
+        image = `<img src="{{ welcome_popup.image.url }}" alt="صورة ترحيبية" class="mx-auto mb-4 max-h-48 rounded shadow">`;
+      {% endif %}
+
+      // ✅ الرسالة
+      const message = `<p class="text-gray-700 mb-6">{{ welcome_popup.message|linebreaks }}</p>`;
+
+      // ✅ زر الإغلاق
+      const closeBtn = `
+        <button onclick="closePopup()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-medium shadow">
+          إغلاق
+        </button>
       `;
 
+      popupBox.innerHTML = image + title + message + closeBtn;
+      popupOverlay.appendChild(popupBox);
       document.body.appendChild(popupOverlay);
 
-      // ❌ الإخفاء التلقائي بعد 10 ثوانٍ
+      // ⏳ الإخفاء التلقائي بعد 10 ثوانٍ
       setTimeout(() => {
         closePopup();
       }, 10000);
     }, 1000);
   }
 
-  // ✅ دالة إغلاق النافذة يدويًا
+  // ✅ دالة إغلاق النافذة
   function closePopup() {
     const el = document.getElementById("welcomePopup");
     if (el) el.remove();
   }
 </script>
+
+<!-- ✅ حركة دخول بسيطة -->
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+</style>
 {% endif %}

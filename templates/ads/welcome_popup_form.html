@@ -6,8 +6,9 @@
 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow p-6">
   <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">🎉 إعداد نافذة ترحيبية</h2>
 
+  <!-- ✅ رسائل Django -->
   {% if messages %}
-    <div class="mb-4">
+    <div class="mb-4 space-y-2">
       {% for message in messages %}
         <div class="px-4 py-2 rounded text-sm {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
           {{ message }}
@@ -16,32 +17,48 @@
     </div>
   {% endif %}
 
+  <!-- ✅ نموذج الإنشاء / التعديل -->
   <form method="post" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    <!-- العنوان -->
+    <!-- 📌 عنوان الرسالة -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">📌 عنوان الرسالة</label>
       {{ form.title }}
       {{ form.title.errors }}
     </div>
 
-    <!-- الرسالة -->
+    <!-- 💬 محتوى الرسالة -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">💬 محتوى الرسالة</label>
       {{ form.message }}
-      <p class="text-xs text-gray-500 mt-1">يمكنك استخدام HTML للفواصل مثل &lt;br&gt;</p>
+      <p class="text-xs text-gray-500 mt-1">يمكنك استخدام وسوم HTML مثل &lt;br&gt; للفواصل.</p>
       {{ form.message.errors }}
     </div>
 
-    <!-- التفعيل -->
-    <div class="flex items-center space-x-2 rtl:space-x-reverse">
+    <!-- 🖼️ الصورة -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">🖼️ صورة اختيارية</label>
+      {{ form.image }}
+      {{ form.image.errors }}
+
+      {% if form.instance.image %}
+        <div class="mt-4">
+          <span class="text-xs text-gray-500 block mb-1">📷 الصورة الحالية:</span>
+          <img src="{{ form.instance.image.url }}" alt="صورة النافذة" class="max-w-xs rounded border border-gray-300 shadow">
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ✅ حالة التفعيل -->
+    <div class="flex items-center gap-2">
       {{ form.is_active }}
       <label class="text-sm text-gray-700">تفعيل النافذة للزوار</label>
       {{ form.is_active.errors }}
     </div>
 
+    <!-- 💾 زر الحفظ -->
     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
       💾 حفظ التغييرات
     </button>
