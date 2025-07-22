@@ -1,94 +1,271 @@
-{% include 'ads/welcome_popup_script.html' %}
-
+{% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="font-sans bg-gray-50 text-gray-900">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3b82f6">
   <title>{% block title %}منصة أهالي الحي{% endblock %}</title>
 
-  <!-- ✅ Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Preload Resources -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" as="style">
+  <link rel="preload" href="{% static 'images/logo.png' %}" as="image">
 
-  <!-- ✅ Google Font: Cairo -->
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+          },
+          boxShadow: {
+            '3d': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), 0 0 0 2px rgb(59 130 246 / 0.5)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet" />
 
-  <!-- ✅ Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- ✅ FontAwesome Icons -->
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
 
-  {% load static %}
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
 
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
     }
-    .leaflet-container {
-      direction: ltr !important;
-    }
+    
     .nav-link-active {
-      background-color: #2563eb;
-      color: white !important;
+      background-color: var(--primary);
+      color: #fff !important;
+      font-weight: 600;
+      box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary);
+    }
+    
+    /* Smooth transitions */
+    a, button, .transition {
+      transition: all 0.2s ease;
+    }
+    
+    /* Mobile menu animation */
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .mobile-menu {
+      animation: slideDown 0.3s ease-out;
     }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
+<body class="flex flex-col min-h-screen bg-gray-50">
 
-<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col">
-
-  <!-- ✅ Header -->
-  <header class="bg-white shadow-md py-4 mb-6">
-    <div class="container mx-auto px-4">
-      <div class="flex justify-between items-center mb-3">
-        <h1 class="text-xl font-bold text-gray-800">منصة أهالي الحي</h1>
-
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg sticky top-0 z-40">
+    <div class="container mx-auto px-4 flex justify-between items-center py-3">
+      <!-- Logo + Title -->
+      <div class="flex items-center space-x-3 rtl:space-x-reverse">
+        <img src="{% static 'images/logo.png' %}" alt="شعار الموقع" 
+             class="h-12 w-12 rounded-full shadow-md object-cover" 
+             loading="eager" width="48" height="48" />
+        <h1 class="text-xl md:text-2xl font-bold text-white">منصة أهالي الحي</h1>
+      </div>
+      
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-button" class="md:hidden text-white text-2xl focus:outline-none">
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <!-- Desktop Actions -->
+      <div class="hidden md:block">
         {% if user.is_authenticated %}
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
-          <button type="submit" class="text-red-500">تسجيل الخروج</button>
+          <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>تسجيل الخروج</span>
+          </button>
         </form>
         {% endif %}
       </div>
-
-      {% if user.is_authenticated %}
-      <nav class="flex flex-wrap gap-3 text-sm font-medium text-gray-700">
-
-        {% if user.user_type == "admin" or user.is_superuser %}
-          <a href="{% url 'admin_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-link-active{% endif %}">🏠 الرئيسية</a>
-          <a href="{% url 'admin_orders' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_orders' %}nav-link-active{% endif %}">📦 الطلبات المسلمة</a>
-          <a href="{% url 'admin_users' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_users' %}nav-link-active{% endif %}">👥 المستخدمين</a>
-          <a href="{% url 'admin_stores' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'admin_stores' %}nav-link-active{% endif %}">🏪 المتاجر</a>
-
-        {% elif user.user_type == "merchant" %}
-          <a href="{% url 'merchant_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'merchant_dashboard' %}nav-link-active{% endif %}">🏠 الرئيسية</a>
-          <a href="{% url 'merchant_archive' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'merchant_archive' %}nav-link-active{% endif %}">🗂️ الأرشيف</a>
-          <a href="{% url 'store_settings' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'store_settings' %}nav-link-active{% endif %}">⚙️ إعدادات المتجر</a>
-
-        {% elif user.user_type == "delivery" %}
-          <a href="{% url 'delivery_dashboard' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_dashboard' %}nav-link-active{% endif %}">🚚 الطلبات المتاحة</a>
-          <a href="{% url 'my_orders' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'my_orders' %}nav-link-active{% endif %}">📋 طلباتي</a>
-          <a href="{% url 'delivery_archive' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_archive' %}nav-link-active{% endif %}">📁 الأرشيف</a>
-          <a href="{% url 'delivery_settings' %}" class="px-3 py-1 rounded hover:bg-blue-100 {% if request.resolver_match.url_name == 'delivery_settings' %}nav-link-active{% endif %}">⚙️ الإعدادات</a>
-        {% endif %}
-      </nav>
-      {% endif %}
     </div>
+
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="hidden md:block bg-blue-700">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-wrap justify-center space-x-1 rtl:space-x-reverse">
+          {% if user.user_type == "admin" or user.is_superuser %}
+            <a href="{% url 'admin_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-home"></i>
+              <span>الرئيسية</span>
+            </a>
+            <a href="{% url 'admin_orders' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_orders' %}nav-link-active{% endif %}">
+              <i class="fas fa-box-open"></i>
+              <span>الطلبات المسلمة</span>
+            </a>
+            <a href="{% url 'admin_users' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_users' %}nav-link-active{% endif %}">
+              <i class="fas fa-users"></i>
+              <span>المستخدمين</span>
+            </a>
+            <a href="{% url 'admin_stores' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_stores' %}nav-link-active{% endif %}">
+              <i class="fas fa-store"></i>
+              <span>المتاجر</span>
+            </a>
+          {% elif user.user_type == "merchant" %}
+            <a href="{% url 'merchant_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'merchant_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-home"></i>
+              <span>الرئيسية</span>
+            </a>
+            <a href="{% url 'merchant_archive' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'merchant_archive' %}nav-link-active{% endif %}">
+              <i class="fas fa-archive"></i>
+              <span>الأرشيف</span>
+            </a>
+            <a href="{% url 'store_settings' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'store_settings' %}nav-link-active{% endif %}">
+              <i class="fas fa-cog"></i>
+              <span>إعدادات المتجر</span>
+            </a>
+          {% elif user.user_type == "delivery" %}
+            <a href="{% url 'delivery_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-truck"></i>
+              <span>الطلبات المتاحة</span>
+            </a>
+            <a href="{% url 'my_orders' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'my_orders' %}nav-link-active{% endif %}">
+              <i class="fas fa-clipboard-list"></i>
+              <span>طلباتي</span>
+            </a>
+            <a href="{% url 'delivery_archive' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_archive' %}nav-link-active{% endif %}">
+              <i class="fas fa-archive"></i>
+              <span>الأرشيف</span>
+            </a>
+            <a href="{% url 'delivery_settings' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_settings' %}nav-link-active{% endif %}">
+              <i class="fas fa-cog"></i>
+              <span>الإعدادات</span>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Mobile Navigation Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-blue-700 mobile-menu">
+      <div class="container mx-auto px-4 py-2">
+        <div class="flex flex-col space-y-2">
+          {% if user.user_type == "admin" or user.is_superuser %}
+            <a href="{% url 'admin_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-home w-6 text-center"></i>
+              <span>الرئيسية</span>
+            </a>
+            <a href="{% url 'admin_orders' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_orders' %}nav-link-active{% endif %}">
+              <i class="fas fa-box-open w-6 text-center"></i>
+              <span>الطلبات المسلمة</span>
+            </a>
+            <a href="{% url 'admin_users' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_users' %}nav-link-active{% endif %}">
+              <i class="fas fa-users w-6 text-center"></i>
+              <span>المستخدمين</span>
+            </a>
+            <a href="{% url 'admin_stores' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'admin_stores' %}nav-link-active{% endif %}">
+              <i class="fas fa-store w-6 text-center"></i>
+              <span>المتاجر</span>
+            </a>
+          {% elif user.user_type == "merchant" %}
+            <a href="{% url 'merchant_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'merchant_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-home w-6 text-center"></i>
+              <span>الرئيسية</span>
+            </a>
+            <a href="{% url 'merchant_archive' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'merchant_archive' %}nav-link-active{% endif %}">
+              <i class="fas fa-archive w-6 text-center"></i>
+              <span>الأرشيف</span>
+            </a>
+            <a href="{% url 'store_settings' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'store_settings' %}nav-link-active{% endif %}">
+              <i class="fas fa-cog w-6 text-center"></i>
+              <span>إعدادات المتجر</span>
+            </a>
+          {% elif user.user_type == "delivery" %}
+            <a href="{% url 'delivery_dashboard' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_dashboard' %}nav-link-active{% endif %}">
+              <i class="fas fa-truck w-6 text-center"></i>
+              <span>الطلبات المتاحة</span>
+            </a>
+            <a href="{% url 'my_orders' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'my_orders' %}nav-link-active{% endif %}">
+              <i class="fas fa-clipboard-list w-6 text-center"></i>
+              <span>طلباتي</span>
+            </a>
+            <a href="{% url 'delivery_archive' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_archive' %}nav-link-active{% endif %}">
+              <i class="fas fa-archive w-6 text-center"></i>
+              <span>الأرشيف</span>
+            </a>
+            <a href="{% url 'delivery_settings' %}" class="px-4 py-3 rounded-lg hover:bg-blue-800 text-white transition flex items-center gap-2 {% if request.resolver_match.url_name == 'delivery_settings' %}nav-link-active{% endif %}">
+              <i class="fas fa-cog w-6 text-center"></i>
+              <span>الإعدادات</span>
+            </a>
+          {% endif %}
+          
+          {% if user.is_authenticated %}
+          <form method="post" action="{% url 'logout' %}" class="w-full">
+            {% csrf_token %}
+            <button class="w-full px-4 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white transition flex items-center gap-2">
+              <i class="fas fa-sign-out-alt w-6 text-center"></i>
+              <span>تسجيل الخروج</span>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </header>
 
-  <!-- ✅ Main Content -->
-  <main class="flex-1 container mx-auto px-4 mb-10">
-    {% block content %}{% endblock %}
+  <!-- Main Content -->
+  <main class="flex-1 container mx-auto px-4 py-6 md:py-8">
+    {% block content %}
+    <!-- أمثلة على المحتوى -->
+    {% endblock %}
   </main>
 
-  <!-- ✅ Footer -->
-  <footer class="bg-white shadow-inner py-4 text-center text-sm text-gray-500">
-    &copy; جميع الحقوق محفوظة لـ منصة أهالي الحي {{ now|date:"Y" }}
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-gray-600 text-sm md:text-base">
+            &copy; جميع الحقوق محفوظة لـ منصة أهالي الحي {{ now|date:"Y" }}
+          </p>
+        </div>
+        <div class="flex space-x-4 rtl:space-x-reverse">
+          <a href="#" class="text-gray-600 hover:text-blue-600 transition">
+            <i class="fab fa-facebook-f text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-600 hover:text-blue-400 transition">
+            <i class="fab fa-twitter text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-600 hover:text-red-600 transition">
+            <i class="fab fa-instagram text-lg"></i>
+          </a>
+        </div>
+      </div>
+    </div>
   </footer>
+
+  <!-- Mobile Menu Script -->
+  <script>
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+      this.innerHTML = menu.classList.contains('hidden') ? 
+        '<i class="fas fa-bars"></i>' : '<i class="fas fa-times"></i>';
+    });
+  </script>
 
   {% block extra_scripts %}{% endblock %}
 </body>

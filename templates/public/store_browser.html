@@ -3,86 +3,233 @@
 {% block title %}تصفح المتاجر - منصة أهالي الحي{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow">
+<div class="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+  <!-- رسائل التنبيه -->
   {% if messages %}
-    <div class="mb-6 space-y-2">
+    <div class="mb-6 space-y-3">
       {% for message in messages %}
-        <div class="p-4 rounded text-sm font-medium {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">{{ message }}</div>
+        <div class="p-4 rounded-lg text-sm font-medium flex items-start {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-gray-50 text-gray-800 border border-gray-200{% endif %}">
+          {% if message.tags == 'success' %}
+            <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          {% elif message.tags == 'error' %}
+            <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          {% else %}
+            <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd"/></svg>
+          {% endif %}
+          <span>{{ message }}</span>
+        </div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <div class="flex justify-between items-center mb-6 border-b pb-3">
-    <h2 class="text-2xl font-bold text-gray-800">🏪 المتاجر المتاحة للطلب</h2>
-    <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline flex items-center">← الرجوع للصفحة الرئيسية</a>
+  <!-- عنوان الصفحة -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200">
+    <div class="mb-4 md:mb-0">
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        المتاجر المتاحة للطلب
+      </h1>
+      <p class="text-sm text-gray-600 mt-1">تصفح واطلب من متاجر الحي المختلفة</p>
+    </div>
+    <a href="{% url 'home' %}" class="flex items-center text-blue-600 hover:text-blue-800 transition">
+      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      الرجوع للصفحة الرئيسية
+    </a>
   </div>
 
-  <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
-    <div>
-      <label class="block text-sm text-gray-600 mb-1">🔍 البحث عن متجر</label>
-      <input type="text" name="q" value="{{ request.GET.q }}" class="px-4 py-2 border rounded-lg w-64 focus:ring focus:border-blue-500" placeholder="اسم المتجر أو الموقع...">
-    </div>
-    <div>
-      <label class="block text-sm text-gray-600 mb-1">🏷️ نوع المتجر</label>
-      <select name="type" class="px-4 py-2 border rounded-lg w-48 focus:ring focus:border-blue-500">
-        <option value="">الكل</option>
-        {% for value, label in store_types %}
-          <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div>
-      <label class="block invisible text-sm mb-1">بحث</label>
-      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">🔍 بحث</button>
+  <!-- نموذج البحث والتصفية -->
+  <form method="get" class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-200">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          البحث عن متجر
+        </label>
+        <input type="text" name="q" value="{{ request.GET.q }}" 
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition" 
+               placeholder="اسم المتجر أو الموقع...">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          نوع المتجر
+        </label>
+        <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition">
+          <option value="">الكل</option>
+          {% for value, label in store_types %}
+            <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="flex items-end">
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium flex items-center justify-center transition">
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          بحث
+        </button>
+      </div>
     </div>
   </form>
 
+  <!-- قائمة المتاجر -->
   {% if stores %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for store in stores %}
-        <div class="border rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white">
-          <h3 class="text-lg font-bold text-blue-800 mb-1">🏪 {{ store.name|default:"اسم المتجر غير متوفر" }}</h3>
-          <p class="text-sm text-gray-700 mb-1">📍 {{ store.address|default:"بدون عنوان" }}</p>
-
-          {% if store.latitude and store.longitude %}
-            <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:'6' }},{{ store.longitude|floatformat:'6' }}" target="_blank" class="text-sm text-blue-600 hover:underline block mb-2">🌍 عرض على الخريطة</a>
-          {% else %}
-            <p class="text-xs text-red-600 mb-2">⚠️ لم يتم تحديد موقع هذا المتجر</p>
-          {% endif %}
-
-          <p class="text-sm text-gray-800 font-medium mb-1">
-            🚚 رسوم التوصيل : <span class="text-green-600 font-semibold">{{ store.customer_delivery_fee }} ريال</span>
-          </p>
-
+        <div class="border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              {{ store.name|default:"اسم المتجر غير متوفر" }}
+            </h3>
+            {% if store.latitude and store.longitude %}
+              <a href="https://www.google.com/maps?q={{ store.latitude|floatformat:'6' }},{{ store.longitude|floatformat:'6' }}" 
+                 target="_blank" 
+                 class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded-full flex items-center transition">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                الخريطة
+              </a>
+            {% endif %}
+          </div>
+          
+          <div class="space-y-2 mb-4">
+            <p class="text-sm text-gray-600 flex items-start">
+              <svg class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>{{ store.address|default:"بدون عنوان" }}</span>
+            </p>
+            
+            <p class="text-sm text-gray-600 flex items-center">
+              <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span>ساعات العمل: {{ store.working_hours|default:"غير محددة" }}</span>
+            </p>
+            
+            {% if not store.latitude or not store.longitude %}
+              <p class="text-xs text-red-600 bg-red-50 px-2 py-1 rounded inline-flex items-center">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                لم يتم تحديد موقع هذا المتجر
+              </p>
+            {% endif %}
+          </div>
+          
+          <div class="mb-4">
+            <p class="text-sm font-medium text-gray-700 flex items-center">
+              <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+              رسوم التوصيل: <span class="font-semibold text-green-700 ml-1">{{ store.customer_delivery_fee }} ريال</span>
+            </p>
+          </div>
+          
           {% if store.delivery_policy_note %}
-            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-2 mb-3 shadow-sm">
-              ⚠️ {{ store.delivery_policy_note }}
+            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs rounded-lg px-3 py-2 mb-4 flex items-start">
+              <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              {{ store.delivery_policy_note }}
             </div>
           {% endif %}
-
-          <button onclick="openOrderForm({{ store.id }})" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm py-2.5 rounded-lg font-semibold transition">
-            🛒 اطلب الآن
+          
+          <button onclick="openOrderForm({{ store.id }})" 
+                  class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center transition group-hover:shadow-md">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            اطلب الآن
           </button>
-
-          <!-- ✅ نموذج الطلب -->
-          <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg relative">
-              <button onclick="closeOrderForm({{ store.id }})" class="absolute top-2 left-2 text-red-500 text-xl font-bold">&times;</button>
+          
+          <!-- نموذج الطلب -->
+          <div id="order-form-{{ store.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
+              <button onclick="closeOrderForm({{ store.id }})" 
+                      class="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+              
+              <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">طلب من {{ store.name }}</h3>
+              
               <form method="post" action="{% url 'submit_store_order' store.id %}" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="store_name" value="{{ store.name }}">
-                <input type="text" name="full_name" placeholder="الاسم الكامل" class="w-full border p-2 rounded" required>
-                <input type="text" name="phone_number" placeholder="رقم الجوال" class="w-full border p-2 rounded" required>
-                <textarea name="order_details" placeholder="تفاصيل الطلب..." class="w-full border p-2 rounded" rows="3" required></textarea>
-                <div class="flex gap-4 text-sm">
-                  <label><input type="radio" name="order_type" value="pickup" required> استلام</label>
-                  <label><input type="radio" name="order_type" value="delivery"> توصيل</label>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                  <input type="text" name="full_name" placeholder="أدخل اسمك الكامل" 
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition" required>
                 </div>
-                <div id="map-{{ store.id }}" class="h-48 w-full border rounded"></div>
-                <button type="button" onclick="reLocate({{ store.id }})" class="bg-gray-100 hover:bg-gray-200 text-sm px-3 py-1 rounded mt-2">📍 تحديد موقعي تلقائيًا</button>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">رقم الجوال</label>
+                  <input type="text" name="phone_number" placeholder="أدخل رقم جوالك" 
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition" required>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">تفاصيل الطلب</label>
+                  <textarea name="order_details" placeholder="اكتب تفاصيل طلبك هنا..." rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition" required></textarea>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">نوع الطلب</label>
+                  <div class="flex gap-6">
+                    <label class="inline-flex items-center">
+                      <input type="radio" name="order_type" value="pickup" class="h-4 w-4 text-blue-600 focus:ring-blue-500" required>
+                      <span class="ml-2 text-gray-700">استلام من المتجر</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                      <input type="radio" name="order_type" value="delivery" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                      <span class="ml-2 text-gray-700">توصيل إلى العنوان</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">حدد موقعك على الخريطة</label>
+                  <div id="map-{{ store.id }}" class="h-48 w-full border border-gray-300 rounded-lg"></div>
+                  <button type="button" onclick="reLocate({{ store.id }})" 
+                          class="mt-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg inline-flex items-center transition">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    تحديد موقعي تلقائيًا
+                  </button>
+                </div>
+                
                 <input type="hidden" name="location_lat">
                 <input type="hidden" name="location_lng">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">إرسال الطلب</button>
+                
+                <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center transition mt-4">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  إرسال الطلب
+                </button>
               </form>
             </div>
           </div>
@@ -90,15 +237,22 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="text-center text-gray-500 mt-10">لا توجد متاجر متاحة حالياً.</p>
+    <div class="text-center py-12">
+      <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-gray-700">لا توجد متاجر متاحة حالياً</h3>
+      <p class="mt-1 text-sm text-gray-500">يمكنك المحاولة بتغيير معايير البحث أو الرجوع لاحقاً</p>
+    </div>
   {% endif %}
 </div>
 
-<!-- ✅ Leaflet -->
+<!-- مكتبة Leaflet للخرائط -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+// وظائف JavaScript مع الحفاظ على نفس المنطق
 function openOrderForm(storeId) {
   const form = document.getElementById(`order-form-${storeId}`);
   form.classList.remove("hidden");
@@ -130,7 +284,6 @@ function openOrderForm(storeId) {
         marker.setLatLng([latitude, longitude]);
         latInput.value = latitude;
         lngInput.value = longitude;
-        console.log("✅ تم تحديد موقعك تلقائيًا.");
       },
       function (err) {
         alert("⚠️ لم نتمكن من تحديد موقعك تلقائيًا، سيتم تعيين موقع افتراضي (حي الرمال).\nالسبب: " + err.message);
@@ -168,7 +321,6 @@ function reLocate(storeId) {
       map.setView([lat, lng], 15);
       latInput.value = lat;
       lngInput.value = lng;
-      alert("✅ تم تحديد موقعك بنجاح!");
     },
     function (err) {
       alert("❌ تعذر تحديد الموقع: " + err.message);
