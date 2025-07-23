@@ -76,7 +76,7 @@
     <div class="container mx-auto px-4 flex justify-between items-center py-3">
       <!-- Logo + Title -->
       <div class="flex items-center space-x-3 rtl:space-x-reverse">
-        <img src="{% static 'images/logo.png' %}" alt="شعار الموقع" 
+        <img src="{% static 'images/logo.jpg' %}" alt="شعار الموقع" 
              class="h-12 w-12 rounded-full shadow-md object-cover" 
              loading="eager" width="48" height="48" />
         <h1 class="text-xl md:text-2xl font-bold text-white">منصة أهالي الحي</h1>
@@ -268,5 +268,7 @@
   </script>
 
   {% block extra_scripts %}{% endblock %}
+  {% block extra_js %}{% endblock %}
+
 </body>
 </html>
