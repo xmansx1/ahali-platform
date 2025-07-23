@@ -5,8 +5,8 @@
 {% block title %}طلباتي الحالية{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-4 sm:p-6 mb-10">
-  <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">📦 طلباتي الحالية</h2>
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6 mb-10">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">📦 طلباتي الحالية</h2>
 
   {% if messages %}
     <div class="mb-4 space-y-2">
@@ -19,76 +19,62 @@
   {% endif %}
 
   {% for order in orders %}
-    <div class="border border-gray-200 rounded-xl shadow-sm p-4 sm:p-5 mb-6 bg-gray-50 hover:bg-gray-100 transition-all duration-200">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base text-gray-700 leading-relaxed">
+    <div class="border border-gray-200 rounded-xl shadow-sm p-5 mb-6 bg-gray-50 hover:bg-gray-100 transition-all duration-200">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 leading-relaxed">
         <div>
           <p><strong>👤 العميل:</strong> {{ order.customer_name }}</p>
           {% if order.customer_phone %}
-            <p class="text-gray-600 text-xs mt-1 break-all">{{ order.customer_phone }}</p>
+            <p class="text-gray-600 text-xs mt-1">{{ order.customer_phone }}</p>
           {% endif %}
         </div>
 
-        <div>
-          <p><strong>💵 المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
-        </div>
+        <p><strong>💵 المبلغ:</strong> {{ order.invoice_amount|default:"-" }} ريال</p>
+        <p><strong>📝 تفاصيل الطلب:</strong> {{ order.details }}</p>
 
-        <div class="sm:col-span-2">
-          <p><strong>📝 تفاصيل الطلب:</strong> {{ order.details }}</p>
-        </div>
-
-        <div>
-          <p><strong>📍 موقع العميل:</strong>
+        <p>
+          <strong>📍 موقع العميل:</strong>
           {% if order.customer_latitude and order.customer_longitude %}
             <a href="https://www.google.com/maps?q={{ order.customer_latitude }},{{ order.customer_longitude }}" target="_blank" class="text-blue-600 hover:underline">🔗 انتقل</a>
           {% else %}
             <span class="text-gray-500">غير متوفر</span>
           {% endif %}
-          </p>
-        </div>
+        </p>
 
-        <div>
-          <p><strong>📌 موقع المتجر:</strong>
+        <p>
+          <strong>📌 موقع المتجر:</strong>
           {% if order.store_latitude and order.store_longitude %}
             <a href="https://www.google.com/maps?q={{ order.store_latitude }},{{ order.store_longitude }}" target="_blank" class="text-blue-600 hover:underline">🔗 انتقل</a>
           {% else %}
             <span class="text-gray-500">غير محدد</span>
           {% endif %}
-          </p>
-        </div>
+        </p>
 
-        <div class="sm:col-span-2">
-          <p>
-            <strong>🏪 المتجر:</strong> {{ order.store.name|default:"اسم غير متوفر" }}
-            {% if order.store.user.username %}
-              <span class="text-gray-600 text-xs">({{ order.store.user.username }})</span>
-            {% endif %}
-          </p>
-        </div>
+        <p>
+          <strong>🏪 المتجر:</strong> {{ order.store.name|default:"اسم غير متوفر" }}
+          {% if order.store.user.username %}
+            <span class="text-gray-600 text-xs">({{ order.store.user.username }})</span>
+          {% endif %}
+        </p>
       </div>
 
       <!-- ✅ الأزرار -->
-      <div class="flex flex-wrap gap-3 mt-5 text-sm">
-        <a href="{% url 'complete_order' order.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+      <div class="flex flex-wrap gap-3 mt-5">
+        <a href="{% url 'complete_order' order.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
           ✅ تم التوصيل
         </a>
 
         {% if order.customer_phone %}
-          <a href="tel:{{ order.customer_phone }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+          <a href="tel:{{ order.customer_phone }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
             📞 اتصال
           </a>
 
           {% with order.customer_phone|whatsapp_number as whatsapp_number %}
             {% if whatsapp_number %}
-              {% with order.store.name as store_name %}
-              {% with order.invoice_amount|floatformat:2 as amount %}
-                {% with "طلبك من متجر "|add:store_name|add:" في طريقه إليك 🚚.%0Aالرجاء تجهيز مبلغ "|add:amount|add:" ريال.%0A💳 طريقة الدفع: كاش / تحويل بنكي / STCPay" as message %}
-                  <a href="https://wa.me/{{ whatsapp_number }}?text={{ message|urlencode }}" target="_blank"
-                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
-                    💬 واتساب
-                  </a>
-                {% endwith %}
-              {% endwith %}
-              {% endwith %}
+              <a href="https://wa.me/{{ whatsapp_number }}?text=أهلاً {{ order.customer_name }}%0Aطلبك من متجر {{ order.store.name }} في طريقه إليك%0Aالمبلغ المراد تحصيله: {{ order.invoice_amount|stringformat:'s' }} ريال%0Aطرق الدفع: كاش - تحويل - STCPay"
+                 target="_blank"
+                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                💬 واتساب
+              </a>
             {% else %}
               <span class="text-sm text-red-500">📵 رقم غير صالح للواتساب</span>
             {% endif %}
@@ -97,7 +83,7 @@
 
         {% if order.customer_latitude and order.customer_longitude and order.store_latitude and order.store_longitude %}
           <button onclick="openMapModal({{ order.store_latitude }}, {{ order.store_longitude }}, {{ order.customer_latitude }}, {{ order.customer_longitude }})"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition">
             🗺️ عرض الخريطة
           </button>
         {% endif %}
@@ -109,41 +95,35 @@
 </div>
 
 <!-- ✅ Modal الخريطة -->
-<div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 px-2">
+<div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-4 relative">
-    <button onclick="closeMapModal()" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 text-xl">✖</button>
-    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">🗺️ المسار من المتجر إلى العميل</h2>
-    <div id="leafletMap" class="w-full h-80 sm:h-96 rounded-lg border"></div>
+    <button onclick="closeMapModal()" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800">✖</button>
+    <h2 class="text-xl font-bold text-gray-800 mb-4">🗺️ المسار من المتجر إلى العميل</h2>
+    <div id="leafletMap" class="w-full h-96 rounded-lg border"></div>
   </div>
 </div>
 
-<!-- ✅ Leaflet -->
+<!-- ✅ Leaflet and Script -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  let mapInstance = null;
-
   function openMapModal(storeLat, storeLng, customerLat, customerLng) {
     document.getElementById("mapModal").classList.remove("hidden");
     const mapContainer = document.getElementById("leafletMap");
     mapContainer.innerHTML = "";
 
-    if (mapInstance !== null) {
-      mapInstance.remove();
-    }
-
-    mapInstance = L.map("leafletMap").setView([storeLat, storeLng], 13);
+    const map = L.map("leafletMap").setView([storeLat, storeLng], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(mapInstance);
+    }).addTo(map);
 
-    L.marker([storeLat, storeLng])
-      .addTo(mapInstance)
+    const storeMarker = L.marker([storeLat, storeLng])
+      .addTo(map)
       .bindPopup("🏪 المتجر")
       .openPopup();
 
-    L.marker([customerLat, customerLng])
-      .addTo(mapInstance)
+    const customerMarker = L.marker([customerLat, customerLng])
+      .addTo(map)
       .bindPopup("📍 العميل");
 
     const route = L.polyline(
@@ -152,9 +132,9 @@
         [customerLat, customerLng],
       ],
       { color: "blue" }
-    ).addTo(mapInstance);
+    ).addTo(map);
 
-    mapInstance.fitBounds(route.getBounds(), { padding: [50, 50] });
+    map.fitBounds(route.getBounds(), { padding: [50, 50] });
   }
 
   function closeMapModal() {
