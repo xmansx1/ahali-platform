@@ -51,23 +51,17 @@
     <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-8 md:mb-12">✨ ماذا تقدم المنصة؟</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-blue-600 text-3xl mb-4">
-          <i class="fas fa-store"></i>
-        </div>
+        <div class="text-blue-600 text-3xl mb-4"><i class="fas fa-store"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">🛒 متاجر قريبة</h3>
         <p class="text-gray-600 text-sm md:text-base">تصفح واطلب من متاجر حي تنال بسهولة.</p>
       </div>
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-green-600 text-3xl mb-4">
-          <i class="fas fa-truck"></i>
-        </div>
+        <div class="text-green-600 text-3xl mb-4"><i class="fas fa-truck"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">🚚 مناديب محليون</h3>
         <p class="text-gray-600 text-sm md:text-base">توصيل سريع وآمن داخل الحي.</p>
       </div>
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-yellow-500 text-3xl mb-4">
-          <i class="fas fa-bullhorn"></i>
-        </div>
+        <div class="text-yellow-500 text-3xl mb-4"><i class="fas fa-bullhorn"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">📢 إعلانات مميزة</h3>
         <p class="text-gray-600 text-sm md:text-base">إعلانات مخصصة لسكان الحي فقط.</p>
       </div>
@@ -131,21 +125,23 @@
 
 <!-- ✅ Scripts -->
 <script>
-  function closeWelcomePopup() {
-    document.getElementById('welcome-popup').classList.add('hidden');
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('popupShown', today);
-  }
-
+  // ✅ إظهار نافذة الترحيب دائمًا
   window.addEventListener('load', () => {
-    const today = new Date().toISOString().split('T')[0];
-    if (localStorage.getItem('popupShown') === today) {
-      const popup = document.getElementById('welcome-popup');
-      if (popup) popup.classList.add('hidden');
-    } else {
-      setTimeout(closeWelcomePopup, 10000);
+    const popup = document.getElementById('welcome-popup');
+    if (popup) {
+      popup.classList.remove('hidden');
+
+      // إغلاق تلقائي بعد 10 ثوانٍ
+      setTimeout(() => {
+        popup.classList.add('hidden');
+      }, 10000);
     }
   });
+
+  function closeWelcomePopup() {
+    const popup = document.getElementById('welcome-popup');
+    if (popup) popup.classList.add('hidden');
+  }
 
   function openAdModal(id) {
     document.getElementById(`ad-modal-${id}`).classList.remove("hidden");
