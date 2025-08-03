@@ -11,7 +11,6 @@
     <div onclick="event.stopPropagation()"
          class="bg-white rounded-xl p-6 max-w-md w-full text-center relative shadow-2xl animate-fade-in">
 
-      <!-- زر الإغلاق -->
       <button onclick="closeWelcomePopup()"
               class="absolute top-3 left-3 text-gray-400 hover:text-red-600 text-2xl transition">
         &times;
@@ -128,9 +127,23 @@
 
 </div>
 
-<!-- ✅ Scripts -->
+<!-- ✅ زر واتساب عائم -->
+<a href="https://wa.me/966546868219?text=مرحبًا، أود المساعدة 👋"
+   target="_blank"
+   aria-label="تواصل واتساب"
+   class="fixed bottom-5 right-5 z-50 flex items-center gap-2 group"
+   style="direction: rtl">
+  <span class="bg-green-600 text-white text-sm rounded-full py-2 px-4 shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2 hidden sm:inline-block">
+    تواصل معنا
+  </span>
+  <div class="bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-300">
+    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="..."/> <!-- تم اختصار المسار الطويل للأيقونة -->
+    </svg>
+  </div>
+</a>
+
 <script>
-  // ✅ إظهار نافذة الترحيب دائمًا
   window.addEventListener('load', () => {
     const popup = document.getElementById('welcome-popup');
     if (popup) {
