@@ -5,7 +5,7 @@
 <div class="space-y-12 md:space-y-24">
 
   <!-- ✅ نافذة الترحيب المنبثقة -->
-  {% if popup and popup.is_active %}
+  {% if welcome_popup and welcome_popup.is_active %}
   <div id="welcome-popup"
        class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center transition-opacity p-4">
     <div onclick="event.stopPropagation()"
@@ -14,8 +14,8 @@
               class="absolute top-3 left-3 text-gray-400 hover:text-red-600 text-2xl transition">
         &times;
       </button>
-      <h3 class="text-xl md:text-2xl font-bold text-blue-700 mb-3">{{ popup.title }}</h3>
-      <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ popup.message }}</p>
+      <h3 class="text-xl md:text-2xl font-bold text-blue-700 mb-3">{{ welcome_popup.title }}</h3>
+      <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ welcome_popup.message }}</p>
     </div>
   </div>
   {% endif %}
@@ -33,13 +33,11 @@
         {% if not user.is_authenticated %}
         <a href="{% url 'login' %}"
            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
-          <i class="fas fa-sign-in-alt"></i>
           <span>🔐 تسجيل الدخول</span>
         </a>
         {% endif %}
         <a href="{% url 'public_store_browser' %}"
            class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
-          <i class="fas fa-store"></i>
           <span>🛍️ المتاجر المتاحة الآن</span>
         </a>
       </div>
@@ -51,17 +49,14 @@
     <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-8 md:mb-12">✨ ماذا تقدم المنصة؟</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-blue-600 text-3xl mb-4"><i class="fas fa-store"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">🛒 متاجر قريبة</h3>
         <p class="text-gray-600 text-sm md:text-base">تصفح واطلب من متاجر حي تنال بسهولة.</p>
       </div>
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-green-600 text-3xl mb-4"><i class="fas fa-truck"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">🚚 مناديب محليون</h3>
         <p class="text-gray-600 text-sm md:text-base">توصيل سريع وآمن داخل الحي.</p>
       </div>
       <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
-        <div class="text-yellow-500 text-3xl mb-4"><i class="fas fa-bullhorn"></i></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">📢 إعلانات مميزة</h3>
         <p class="text-gray-600 text-sm md:text-base">إعلانات مخصصة لسكان الحي فقط.</p>
       </div>
@@ -130,8 +125,6 @@
     const popup = document.getElementById('welcome-popup');
     if (popup) {
       popup.classList.remove('hidden');
-
-      // إغلاق تلقائي بعد 10 ثوانٍ
       setTimeout(() => {
         popup.classList.add('hidden');
       }, 10000);
