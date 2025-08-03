@@ -4,54 +4,139 @@
 {% block title %}إضافة إعلان جديد{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto px-4 py-8 bg-white rounded-xl shadow">
-  <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">➕ إضافة إعلان جديد</h1>
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+  <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+    <div class="p-6 sm:p-8">
+      <div class="flex items-center mb-6">
+        <div class="bg-blue-100 p-3 rounded-full mr-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">إضافة إعلان جديد</h1>
+      </div>
 
-  <form method="post" enctype="multipart/form-data" class="space-y-6">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
 
-    <!-- 📝 العنوان -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">عنوان الإعلان</label>
-      {{ form.title }}
-      {{ form.title.errors }}
+        <!-- 📝 العنوان -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">عنوان الإعلان</label>
+          {{ form.title }}
+          {{ form.title.errors }}
+        </div>
+
+        <!-- 🧾 نص الإعلان -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">نص الإعلان</label>
+          {{ form.text }}
+          {{ form.text.errors }}
+        </div>
+
+        <!-- 🌐 الرابط -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">رابط التحويل (اختياري)</label>
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+              https://
+            </span>
+            {{ form.link }}
+          </div>
+          {{ form.link.errors }}
+        </div>
+
+        <!-- 🖼️ الصورة -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">صورة الإعلان</label>
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+            <div class="space-y-1 text-center">
+              <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <div class="flex text-sm text-gray-600">
+                <label class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                  <span>اختر ملفاً</span>
+                  {{ form.image }}
+                </label>
+                <p class="pr-1">أو اسحب وأسقط هنا</p>
+              </div>
+              <p class="text-xs text-gray-500">PNG, JPG, GIF بحد أقصى 5MB</p>
+            </div>
+          </div>
+          {{ form.image.errors }}
+        </div>
+
+        <!-- ✅ التفعيل -->
+        <div class="flex items-center">
+          <div class="relative flex items-start">
+            <div class="flex items-center h-5">
+              {{ form.is_active }}
+            </div>
+            <div class="mr-3 text-sm">
+              <label class="font-medium text-gray-700">تفعيل الإعلان</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 💾 Actions -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+          <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+            <svg xmlns="http://www.w3.org/2000/svg" class="-mr-1 ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            حفظ الإعلان
+          </button>
+          <a href="{% url 'ads:admin_ads_list' %}" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+            <svg xmlns="http://www.w3.org/2000/svg" class="-mr-1 ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            الرجوع للقائمة
+          </a>
+        </div>
+      </form>
     </div>
-
-    <!-- 🧾 نص الإعلان -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">نص الإعلان</label>
-      {{ form.text }}
-      {{ form.text.errors }}
-    </div>
-
-    <!-- 🌐 الرابط -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">رابط التحويل (اختياري)</label>
-      {{ form.link }}
-      {{ form.link.errors }}
-    </div>
-
-    <!-- 🖼️ الصورة -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">صورة الإعلان</label>
-      {{ form.image }}
-      {{ form.image.errors }}
-    </div>
-
-    <!-- ✅ التفعيل -->
-    <div class="flex items-center gap-2">
-      {{ form.is_active }}
-      <label class="text-sm text-gray-700">تفعيل الإعلان</label>
-    </div>
-
-    <!-- 💾 زر الحفظ -->
-    <div class="flex gap-4">
-      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-        💾 حفظ الإعلان
-      </button>
-      <a href="{% url 'ads:admin_ads_list' %}" class="text-gray-600 hover:underline">↩️ الرجوع للقائمة</a>
-    </div>
-  </form>
+  </div>
 </div>
+
+<style>
+  /* Enhance form inputs for better mobile experience */
+  input[type="text"],
+  input[type="url"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  input[type="text"]:focus,
+  input[type="url"]:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Style the checkbox */
+  input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #3b82f6;
+    border-color: #d1d5db;
+    border-radius: 0.25rem;
+  }
+  
+  /* File input styling */
+  .file-input {
+    opacity: 0;
+    width: 0.1px;
+    height: 0.1px;
+    position: absolute;
+  }
+</style>
 {% endblock %}
