@@ -86,7 +86,7 @@
   {% if stores %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for store in stores %}
-        <div class="border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+        <div class="border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group flex flex-col h-full">
           <div class="flex justify-between items-start mb-3">
             <h3 class="text-lg font-bold text-gray-800 flex items-center">
               <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -107,20 +107,13 @@
             {% endif %}
           </div>
           
-          <div class="space-y-2 mb-4">
+          <div class="space-y-2 mb-4 flex-grow">
             <p class="text-sm text-gray-600 flex items-start">
               <svg class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
               <span>{{ store.address|default:"بدون عنوان" }}</span>
-            </p>
-            
-            <p class="text-sm text-gray-600 flex items-center">
-              <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-              <span>ساعات العمل: {{ store.working_hours|default:"غير محددة" }}</span>
             </p>
             
             {% if not store.latitude or not store.longitude %}
@@ -131,28 +124,28 @@
                 لم يتم تحديد موقع هذا المتجر
               </p>
             {% endif %}
-          </div>
-          
-          <div class="mb-4">
-            <p class="text-sm font-medium text-gray-700 flex items-center">
-              <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-              رسوم التوصيل: <span class="font-semibold text-green-700 ml-1">{{ store.customer_delivery_fee }} ريال</span>
-            </p>
-          </div>
-          
-          {% if store.delivery_policy_note %}
-            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs rounded-lg px-3 py-2 mb-4 flex items-start">
-              <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-              </svg>
-              {{ store.delivery_policy_note }}
+            
+            <div class="mt-4">
+              <p class="text-sm font-medium text-gray-700 flex items-center">
+                <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                رسوم التوصيل: <span class="font-semibold text-green-700 ml-1">{{ store.customer_delivery_fee }} ريال</span>
+              </p>
             </div>
-          {% endif %}
+            
+            {% if store.delivery_policy_note %}
+              <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs rounded-lg px-3 py-2 mt-3 flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                {{ store.delivery_policy_note }}
+              </div>
+            {% endif %}
+          </div>
           
           <button onclick="openOrderForm({{ store.id }})" 
-                  class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center transition group-hover:shadow-md">
+                  class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center transition group-hover:shadow-md mt-auto">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
